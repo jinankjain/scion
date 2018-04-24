@@ -1,17 +1,18 @@
 .PHONY: all clean install uninstall
 
-CC = clang
+GOLANG = go
 CFLAGS ?= -Wall -Werror -g -O2
-LDFLAGS ?= -lpthread -lzlog -Wl,-Bstatic -ltcpmw -llwip -lfilter -lscion -Wl,-Bdynamic
+LDFLAGS ?= -L/usr/local/lib -lzlog -L/usr/local/lib -ltcpmw -L/usr/local/lib -llwip -L/usr/local/lib -lfilter -L/usr/local/lib -lscion -lpthread
 
-LIB_DIR = ../lib
-LWIPDIR = ../../sub/lwip/src/include
-LWIPPORTDIR = ../../sub/lwip-contrib/ports/unix
+LIB_DIR = $(realpath ../lib)
+LWIPDIR = $(realpath ../../sub/lwip/src/include)
+LWIPPORTDIR = $(realpath ../../sub/lwip-contrib/ports/unix)
 INC = -I$(LIB_DIR) -I$(LWIPDIR) -I$(LWIPDIR)/scion -I$(LWIPDIR)/ipv4
 INC += -I$(LWIPPORTDIR)/include -I$(LWIPPORTDIR)/proj/scion
+INC += -I/usr/local/include
 
 TARGETS = dispatcher
-INSTALL = ../../bin/dispatcher
+INSTALL = $(realpath ../../bin/dispatcher)
 PREFIX = ..
 all: $(TARGETS)
 
@@ -21,8 +22,8 @@ clean:
 # Compile .c files, while also automatically generating dependencies so they
 # can be recompiled if any of the included header files changed.
 -include *.d
-dispatcher: dispatcher.c
-	$(CC) $(CFLAGS) $(INC) -MMD -o $@ $< $(LDFLAGS)
+dispatcher: dispatcher.go
+	CGO_CFLAGS="$(INC)" CGO_LDFLAGS="$(LDFLAGS)" $(GOLANG) build $<
 
 install: $(INSTALL)
 
