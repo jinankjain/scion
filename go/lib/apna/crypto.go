@@ -61,7 +61,7 @@ func decryptEphID(iv, msg []byte) *EphID {
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
 	ephID := &EphID{}
-	ephID.kind[0] = ciphertext[aes.BlockSize] ^ msg[kindOffset]
+	ephID.kind = ciphertext[aes.BlockSize] ^ msg[kindOffset]
 	for i := range ephID.host {
 		ephID.host[i] = msg[i+hostOffset] ^ ciphertext[aes.BlockSize+i+hostOffset]
 	}
@@ -89,7 +89,7 @@ func encryptEphID(ephID *EphID) ([]byte, []byte) {
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
 	finalEphID := make([]byte, 8)
-	finalEphID[kindOffset] = ephID.kind[0] ^ ciphertext[aes.BlockSize]
+	finalEphID[kindOffset] = ephID.kind ^ ciphertext[aes.BlockSize]
 	for i, v := range ephID.host {
 		finalEphID[i+hostOffset] = v ^ ciphertext[aes.BlockSize+hostOffset+i]
 	}

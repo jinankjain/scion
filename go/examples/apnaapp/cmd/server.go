@@ -42,7 +42,7 @@ func StartServer(server *snet.Addr) {
 
 	// Connect to management service
 	conn := connectToApnaManager()
-	msg := []byte{1}
+	msg := []byte{0}
 	conn.Write(msg)
 	finalEphID := make([]byte, 16)
 	n, err := conn.Read(finalEphID)
@@ -52,9 +52,11 @@ func StartServer(server *snet.Addr) {
 	fmt.Println("ephid: ", finalEphID)
 	fmt.Printf("bytes read: %v\n", n)
 
-	verify := make([]byte, 1)
-	verify[0] = 0x02
-	verify = append(verify, finalEphID...)
+	verify := make([]byte, 2)
+	verify[0] = 0x03
+	verify[1] = 0x00
+	addr := []byte(conn.LocalAddr().String())
+	verify = append(verify, addr...)
 	fmt.Println("msg to be send: ", verify)
 	conn.Write(verify)
 
