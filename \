@@ -90,10 +90,8 @@ func GenSharedSecret(pubkey common.RawBytes, privkey common.RawBytes, algo strin
 			return nil, common.NewBasicError(InvalidKeySize, nil, "algo", algo)
 		}
 		var pub, priv, secret *[32]byte
-		for _, i := range pubkey {
-			pub[i] = pubkey[i]
-			priv[i] = privkey[i]
-		}
+		priv = privkey.(*[32]byte)
+		pub = pubkey.(*[32]byte)
 		secret = new([32]byte)
 		box.Precompute(secret, pub, priv)
 		return secret[:], nil

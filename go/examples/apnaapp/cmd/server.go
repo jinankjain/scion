@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/scionproto/scion/go/lib/addr"
+	//"github.com/scionproto/scion/go/lib/crypto"
 	"github.com/scionproto/scion/go/lib/snet"
 )
 
