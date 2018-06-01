@@ -13,7 +13,15 @@ func StartClient(client *snet.Addr, server *snet.Addr) {
 	if err := snet.Init(client.IA, sciond, dispatcher); err != nil {
 		log.Fatal("Unable to initialize SCION network", "err", err)
 	}
+
 	log.Print("SCION Network successfully initialized")
+
+	// Step 1: Connect to Apna Manager
+	apnaConn := connectToApnaManager()
+
+	// Step 2: Issue an CtrlEphID for yourself
+	issueEphID(apnaConn)
+
 	cconn, err := snet.DialSCION("udp4", client, server)
 	if err != nil {
 		log.Fatal(err)

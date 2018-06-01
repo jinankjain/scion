@@ -20,18 +20,6 @@ func getDefaultDispatcherSock() string {
 	return "/run/shm/dispatcher/default.sock"
 }
 
-func connectToApnaManager() *net.UDPConn {
-	serverAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%v", apnaManagerPort))
-	if err != nil {
-		panic(err)
-	}
-	conn, err := net.DialUDP("udp", nil, serverAddr)
-	if err != nil {
-		panic(err)
-	}
-	return conn
-}
-
 func StartServer(server *snet.Addr) {
 	// Initialize default SCION networking context
 	sciond := getDefaultSCIONDPath(server.IA)
@@ -42,16 +30,10 @@ func StartServer(server *snet.Addr) {
 	log.Print("SCION Network successfully initialized")
 
 	// Connect to management service
-	conn := connectToApnaManager()
-	msg := []byte{0}
-	conn.Write(msg)
-	finalEphID := make([]byte, 16)
-	n, err := conn.Read(finalEphID)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("ephid: ", finalEphID)
-	fmt.Printf("bytes read: %v\n", n)
+	apnaConn := connectToApnaManager()
+
+	// Issue CtrlEphID
+	issueEphID(apnaConn)
 
 	verify := make([]byte, 2)
 	verify[0] = 0x03
