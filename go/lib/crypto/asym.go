@@ -69,13 +69,20 @@ func Verify(sigInput, sig, verifyKey common.RawBytes, signAlgo string) error {
 // GenKeyPairs generates public/private keys pairs
 func GenKeyPairs(keygenAlgo string) (common.RawBytes, common.RawBytes, error) {
 	switch strings.ToLower(keygenAlgo) {
-	case Ed25519:
+	case Curve25519xSalsa20Poly1305:
 		pubkey, privkey, err := box.GenerateKey(rand.Reader)
 		if err != nil {
 			return nil, nil, common.NewBasicError(FailedToGenerateKeyPairs, err,
 				"keygenAlgo", keygenAlgo)
 		}
 		return pubkey[:], privkey[:], nil
+	case Ed25519:
+		pubkey, privkey, err := ed25519.GenerateKey(rand.Reader)
+		if err != nil {
+			return nil, nil, common.NewBasicError(FailedToGenerateKeyPairs, err,
+				"keygenAlgo", keygenAlgo)
+		}
+		return common.RawBytes(pubkey), common.RawBytes(privkey), nil
 	default:
 		return nil, nil, common.NewBasicError(UnsupportedSignAlgo, nil, "algo", keygenAlgo)
 	}
@@ -85,7 +92,7 @@ func GenKeyPairs(keygenAlgo string) (common.RawBytes, common.RawBytes, error) {
 func GenSharedSecret(pubkey common.RawBytes, privkey common.RawBytes, algo string) (common.RawBytes,
 	error) {
 	switch strings.ToLower(algo) {
-	case Ed25519:
+	case Curve25519xSalsa20Poly1305:
 		if len(pubkey) != 32 || len(privkey) != 32 {
 			return nil, common.NewBasicError(InvalidKeySize, nil, "algo", algo)
 		}

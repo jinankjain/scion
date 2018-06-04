@@ -121,6 +121,15 @@ func handleDNSRequest(protocol string, netAddr string, conn *net.UDPConn, retAdd
 	conn.WriteToUDP(hostIDToEphID[protocol][netAddr], retAddr)
 }
 
+type ApnaConnection struct {
+	serverEphID      []byte
+	clientEphID      []byte
+	negoiatedPrivkey string
+}
+
+func establishConnection() {
+}
+
 func handleRequest(buf []byte, conn *net.UDPConn, retAddr *net.UDPAddr) (ephID *EphID) {
 	switch buf[0] {
 	case CtrlEphID:

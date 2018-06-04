@@ -3,14 +3,11 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"net"
 
 	"github.com/scionproto/scion/go/lib/addr"
 	//"github.com/scionproto/scion/go/lib/crypto"
 	"github.com/scionproto/scion/go/lib/snet"
 )
-
-var apnaManagerPort = 3001
 
 func getDefaultSCIONDPath(ia addr.IA) string {
 	return fmt.Sprintf("/run/shm/sciond/sd%s.sock", ia.FileFmt(false))
@@ -33,15 +30,15 @@ func StartServer(server *snet.Addr) {
 	apnaConn := connectToApnaManager()
 
 	// Issue CtrlEphID
-	issueEphID(apnaConn)
+	issueCtrlEphID(apnaConn)
 
 	verify := make([]byte, 2)
 	verify[0] = 0x03
 	verify[1] = 0x00
-	addr := []byte(conn.LocalAddr().String())
+	addr := []byte(apnaConn.LocalAddr().String())
 	verify = append(verify, addr...)
 	fmt.Println("msg to be send: ", verify)
-	conn.Write(verify)
+	apnaConn.Write(verify)
 
 	sconn, err := snet.ListenSCION("udp4", server)
 	if err != nil {

@@ -20,7 +20,18 @@ const (
 	hostOffset      = 1
 	timestampOffset = 4
 	kindOffset      = 0
+	ephIDLen        = 16
 )
+
+type ApnaCertificate struct {
+	ephID              [ephIDLen]byte
+	pubkey             [32]byte
+	ctrlOrSessionEphId bool
+	expirationTime     [timeStampSize]byte
+	issuingAuthorityID []byte
+	issuerEphID        []byte
+	signature          []byte
+}
 
 // secret is used for computing mac of finalEphid and IV
 var secret = []byte("the shared secret key here")
