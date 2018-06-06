@@ -15,13 +15,16 @@ func init() {
 	flag.StringVar(&configPath, "config", "apna.json", "management service configuration")
 }
 
+var Config *apna.Configuration
+
 func main() {
 	flag.Parse()
-	conf, err := apna.LoadConfig(configPath)
+	var err error
+	Config, err = apna.LoadConfig(configPath)
 	if err != nil {
 		panic(err)
 	}
-	log.Info("Manager configuration", "conf", conf)
+	log.Info("Manager configuration", "conf", Config)
 	err = RunServer(3001)
 	if err != nil {
 		panic(err)

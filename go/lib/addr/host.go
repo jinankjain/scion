@@ -20,6 +20,7 @@ import (
 	"net"
 	"strings"
 
+	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/common"
 )
 
@@ -29,6 +30,7 @@ const (
 	HostTypeNone HostAddrType = iota
 	HostTypeIPv4
 	HostTypeIPv6
+	HostTypeAPNA
 	HostTypeSVC
 )
 
@@ -40,6 +42,8 @@ func (t HostAddrType) String() string {
 		return "IPv4"
 	case HostTypeIPv6:
 		return "IPv6"
+	case HostTypeAPNA:
+		return "APNA"
 	case HostTypeSVC:
 		return "SVC"
 	}
@@ -50,6 +54,7 @@ const (
 	HostLenNone = 0
 	HostLenIPv4 = net.IPv4len
 	HostLenIPv6 = net.IPv6len
+	HostLenAPNA = apna.AddrLen
 	HostLenSVC  = 2
 )
 
@@ -166,6 +171,36 @@ func (h HostIPv6) String() string {
 	return h.IP().String()
 }
 
+// Host APNA type
+// *****************************************
+var _ HostAddr = (HostAPNA)(nil)
+
+type HostAPNA apna.Addr
+
+func (h HostAPNA) Size() int {
+	return HostLenAPNA
+}
+
+func (h HostAPNA) Type() HostAddrType {
+	return HostTypeAPNA
+}
+
+func (h HostAPNA) Pack() common.RawBytes {
+	return common.RawBytes(h)
+}
+
+func (h HostAPNA) IP() net.IP {
+	return nil
+}
+
+func (h HostAPNA) Copy() HostAddr {
+	return HostAPNA(append(apna.Addr(nil), h...))
+}
+
+func (h HostAPNA) String() string {
+	return h.String()
+}
+
 // Host SVC type
 // *****************************************
 var _ HostAddr = (*HostSVC)(nil)
@@ -262,6 +297,8 @@ func HostFromRaw(b common.RawBytes, htype HostAddrType) (HostAddr, error) {
 		return HostIPv4(b[:HostLenIPv4]), nil
 	case HostTypeIPv6:
 		return HostIPv6(b[:HostLenIPv6]), nil
+	case HostTypeAPNA:
+		return HostAPNA(b[:HostLenAPNA]), nil
 	case HostTypeSVC:
 		return HostSVC(binary.BigEndian.Uint16(b)), nil
 	default:
@@ -285,6 +322,8 @@ func HostLen(htype HostAddrType) (uint8, error) {
 		length = HostLenIPv4
 	case HostTypeIPv6:
 		length = HostLenIPv6
+	case HostTypeAPNA:
+		length = HostLenAPNA
 	case HostTypeSVC:
 		length = HostLenSVC
 	default:
@@ -299,7 +338,7 @@ func HostEq(a, b HostAddr) bool {
 
 func HostTypeCheck(t HostAddrType) bool {
 	switch t {
-	case HostTypeIPv6, HostTypeIPv4, HostTypeSVC:
+	case HostTypeIPv6, HostTypeIPv4, HostTypeAPNA, HostTypeSVC:
 		return true
 	}
 	return false
