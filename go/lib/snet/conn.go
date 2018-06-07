@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
+	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/assert"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/hpkt"
@@ -64,12 +65,18 @@ var _ net.PacketConn = (*Conn)(nil)
 
 type Conn struct {
 	conn *reliable.Conn
+	// Connect to APNA management service
+	apnaMSConn *apnad.ManagementService
 	// Local, remote and bind SCION addresses (IA, L3, L4)
 	laddr *Addr
 	raddr *Addr
 	baddr *Addr
 	// svc address
 	svc addr.HostSVC
+	// local EphID
+	localEphID addr.HostAPNA
+	// remote EphID
+	remoteEphID addr.HostAPNA
 	// Describes L3 and L4 protocol; currently only udp4 is implemented
 	net        string
 	readMutex  sync.Mutex

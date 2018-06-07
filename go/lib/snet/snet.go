@@ -51,6 +51,7 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
+	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/pathmgr"
@@ -162,6 +163,7 @@ func (n *Network) DialSCIONWithBindSVC(network string, laddr, raddr, baddr *Addr
 			return nil, common.NewBasicError("Unable to establish path", err)
 		}
 	}
+	conn.remoteEphID = conn.apnaMSConn.DNSRequest(raddr)
 	return conn, nil
 }
 
@@ -179,6 +181,7 @@ func (n *Network) ListenSCION(network string, laddr *Addr) (*Conn, error) {
 // Parameter network must be "udp4".
 func (n *Network) ListenSCIONWithBindSVC(network string, laddr, baddr *Addr,
 	svc addr.HostSVC) (*Conn, error) {
+	var err error
 	if network != "udp4" {
 		return nil, common.NewBasicError("Network not implemented", nil, "net", network)
 	}
@@ -206,6 +209,15 @@ func (n *Network) ListenSCIONWithBindSVC(network string, laddr, baddr *Addr,
 		sendBuffer: make(common.RawBytes, BufSize),
 		svc:        svc}
 
+	// Initialize the APNA management service
+	conn.apnaMSConn, err = apnad.NewManagementService()
+	if err != nil {
+		return nil, common.NewBasicError("Unable to connect to APNA Management Service", err)
+	}
+	conn.localEphID, err = conn.apnaMSConn.GenerateEphID()
+	if err != nil {
+		return nil, common.NewBasicError("Unable to generate local EphID", err)
+	}
 	// Initialize local bind address
 	regAddr := &reliable.AppAddr{}
 	var bindAddr *reliable.AppAddr

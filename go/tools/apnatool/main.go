@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 
@@ -15,15 +16,24 @@ import (
 var (
 	signAlgo  string
 	outputDir string
+	ip        string
+	port      int
 )
 
 func init() {
 	flag.StringVar(&signAlgo, "signAlgo", crypto.Ed25519, "Sign Algorithm")
 	flag.StringVar(&outputDir, "output", ".", "output directory")
+	flag.IntVar(&port, "port", 6000, "management service port")
+	flag.StringVar(&ip, "ip", "127.0.0.1", "ip address for the management service")
 }
 
 func main() {
 	flag.Parse()
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		log.Error("Invalid IP address")
+		os.Exit(1)
+	}
 	pubkey, privkey, err := crypto.GenKeyPairs(signAlgo)
 	if err != nil {
 		log.Error(err.Error())
@@ -33,6 +43,8 @@ func main() {
 		SignAlgorithm: signAlgo,
 		Pubkey:        pubkey,
 		Privkey:       privkey,
+		IP:            parsedIP,
+		Port:          port,
 	}
 	b, err := json.Marshal(c)
 	if err != nil {

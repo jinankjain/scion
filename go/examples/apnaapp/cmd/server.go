@@ -6,12 +6,9 @@ import (
 
 	"github.com/scionproto/scion/go/lib/addr"
 	//"github.com/scionproto/scion/go/lib/crypto"
+	"github.com/scionproto/scion/go/lib/sciond"
 	"github.com/scionproto/scion/go/lib/snet"
 )
-
-func getDefaultSCIONDPath(ia addr.IA) string {
-	return fmt.Sprintf("/run/shm/sciond/sd%s.sock", ia.FileFmt(false))
-}
 
 func getDefaultDispatcherSock() string {
 	return "/run/shm/dispatcher/default.sock"
@@ -19,9 +16,9 @@ func getDefaultDispatcherSock() string {
 
 func StartServer(server *snet.Addr) {
 	// Initialize default SCION networking context
-	sciond := getDefaultSCIONDPath(server.IA)
+	sciondSock := sciond.GetDefaultSCIONDPath(&server.IA)
 	dispatcher := getDefaultDispatcherSock()
-	if err := snet.Init(server.IA, sciond, dispatcher); err != nil {
+	if err := snet.Init(server.IA, sciondSock, dispatcher); err != nil {
 		log.Fatal("Unable to initialize SCION network", "err", err)
 	}
 	log.Print("SCION Network successfully initialized")
