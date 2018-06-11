@@ -24,7 +24,7 @@ func main() {
 		panic(err)
 	}
 	log.Info("Manager configuration", "conf", apnad.Config)
-	err = RunServer(3001)
+	err = RunServer(apnad.Config.Port)
 	if err != nil {
 		panic(err)
 	}

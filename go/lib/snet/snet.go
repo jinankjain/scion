@@ -70,6 +70,11 @@ func Init(ia addr.IA, sciondPath string, dispatcherPath string) error {
 	if err != nil {
 		return err
 	}
+	// Initialize the APNA management service
+	network.apnaMSConn, err = apnad.NewManagementService()
+	if err != nil {
+		return common.NewBasicError("Unable to connect to APNA Management Service", err)
+	}
 	return InitWithNetwork(network)
 }
 
@@ -98,6 +103,8 @@ type Network struct {
 	// is set to nil when operating on a SCIOND-less Network.
 	pathResolver *pathmgr.PR
 	localIA      addr.IA
+	// Connect to APNA management service
+	apnaMSConn *apnad.ManagementService
 }
 
 // NewNetworkWithPR creates a new networking context with path resolver pr. A
@@ -163,7 +170,7 @@ func (n *Network) DialSCIONWithBindSVC(network string, laddr, raddr, baddr *Addr
 			return nil, common.NewBasicError("Unable to establish path", err)
 		}
 	}
-	conn.remoteEphID = conn.apnaMSConn.DNSRequest(raddr)
+	conn.remoteEphID, err = conn.scionNet.apnaMSConn.DNSRequest(raddr.String())
 	return conn, nil
 }
 
@@ -209,12 +216,7 @@ func (n *Network) ListenSCIONWithBindSVC(network string, laddr, baddr *Addr,
 		sendBuffer: make(common.RawBytes, BufSize),
 		svc:        svc}
 
-	// Initialize the APNA management service
-	conn.apnaMSConn, err = apnad.NewManagementService()
-	if err != nil {
-		return nil, common.NewBasicError("Unable to connect to APNA Management Service", err)
-	}
-	conn.localEphID, err = conn.apnaMSConn.GenerateEphID()
+	conn.localEphID, err = conn.scionNet.apnaMSConn.GenerateEphID(apnad.GenerateCtrlEphID)
 	if err != nil {
 		return nil, common.NewBasicError("Unable to generate local EphID", err)
 	}

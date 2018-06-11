@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dchest/siphash"
+	"github.com/scionproto/scion/go/lib/common"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -95,7 +96,7 @@ func handleEphIDGeneration(kind byte, conn *net.UDPConn, retAddr *net.UDPAddr) {
 		hostIDToEphID[retAddr.Network()][retAddr.String()] = response
 	}
 	conn.WriteToUDP(response, retAddr)
-	log.WithField("response", response).Info("Final Encrypted EphID")
+	log.WithField("response", common.RawBytes(response)).Info("Final Encrypted EphID")
 }
 
 func handleEphIDVerification(buf []byte, conn *net.UDPConn, retAddr *net.UDPAddr) {

@@ -30,8 +30,8 @@ const (
 	HostTypeNone HostAddrType = iota
 	HostTypeIPv4
 	HostTypeIPv6
-	HostTypeAPNA
 	HostTypeSVC
+	HostTypeAPNA
 )
 
 func (t HostAddrType) String() string {
@@ -198,7 +198,7 @@ func (h HostAPNA) Copy() HostAddr {
 }
 
 func (h HostAPNA) String() string {
-	return h.String()
+	return string(h)
 }
 
 // Host SVC type

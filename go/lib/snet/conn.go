@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
-	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/assert"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/hpkt"
@@ -65,8 +64,6 @@ var _ net.PacketConn = (*Conn)(nil)
 
 type Conn struct {
 	conn *reliable.Conn
-	// Connect to APNA management service
-	apnaMSConn *apnad.ManagementService
 	// Local, remote and bind SCION addresses (IA, L3, L4)
 	laddr *Addr
 	raddr *Addr
@@ -415,4 +412,12 @@ func (c *Conn) SetWriteDeadline(t time.Time) error {
 
 func (c *Conn) Close() error {
 	return c.conn.Close()
+}
+
+func (c *Conn) GetLocalEphID() addr.HostAPNA {
+	return c.localEphID
+}
+
+func (c *Conn) GetRemoteEphID() addr.HostAPNA {
+	return c.remoteEphID
 }

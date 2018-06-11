@@ -1,32 +1,25 @@
 package cmd
 
 import (
-	"log"
-
+	"github.com/scionproto/scion/go/lib/log"
+	"github.com/scionproto/scion/go/lib/sciond"
 	"github.com/scionproto/scion/go/lib/snet"
 )
 
 func StartClient(client *snet.Addr, server *snet.Addr) {
 	// Initialize default SCION networking context
-	sciond := getDefaultSCIONDPath(client.IA)
+	sciondAddr := sciond.GetDefaultSCIONDPath(&client.IA)
 	dispatcher := getDefaultDispatcherSock()
-	if err := snet.Init(client.IA, sciond, dispatcher); err != nil {
-		log.Fatal("Unable to initialize SCION network", "err", err)
+	log.SetupLogConsole("apnaClient")
+	if err := snet.Init(client.IA, sciondAddr, dispatcher); err != nil {
+		log.Crit("Unable to initialize SCION network", "err", err)
 	}
-
-	log.Print("SCION Network successfully initialized")
-
-	// Step 1: Connect to Apna Manager
-	apnaConn := connectToApnaManager()
-
-	// Step 2: Issue an CtrlEphID for yourself
-	issueCtrlEphID(apnaConn)
-
 	cconn, err := snet.DialSCION("udp4", client, server)
 	if err != nil {
-		log.Fatal(err)
 		panic(err)
 	}
+	log.Debug("Client", "ephID", cconn.GetLocalEphID())
+	log.Debug("Server", "ephID", cconn.GetRemoteEphID())
 	n, err := cconn.Write([]byte("Hello!"))
 	if err != nil {
 		panic(err)
@@ -36,5 +29,5 @@ func StartClient(client *snet.Addr, server *snet.Addr) {
 	for n == 0 {
 		n, err = cconn.Read(buf)
 	}
-	log.Print("Client Recived: ", buf[:n])
+	log.Info("Client Recived: ", buf[:n])
 }

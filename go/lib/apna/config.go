@@ -30,10 +30,10 @@ func LoadConfig(path string) (*Configuration, error) {
 	if err != nil {
 		return nil, common.NewBasicError(ErrLoadingConfig, err, "path", path)
 	}
-	var config *Configuration
-	err = json.Unmarshal(data, config)
+	var config Configuration
+	err = json.Unmarshal(data, &config)
 	if err != nil {
 		return nil, common.NewBasicError(ErrParsingConfig, err, "path", path)
 	}
-	return config, nil
+	return &config, nil
 }
