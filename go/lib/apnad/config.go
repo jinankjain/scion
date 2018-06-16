@@ -23,17 +23,21 @@ type Config struct {
 	SignAlgorithm string          `json:"signAlgo"`
 	Pubkey        common.RawBytes `json:"pubkey"`
 	Privkey       common.RawBytes `json:"privkey"`
+	HMACKey       common.RawBytes `json:"hmacKey"`
+	AESKey        common.RawBytes `json:"aesKey"`
+	SipHashKey    common.RawBytes `json:"siphashKey"`
 }
 
-func LoadConfig(path string) (*Config, error) {
+var ApnadConfig Config
+
+func LoadConfig(path string) error {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, common.NewBasicError(ErrLoadingConfig, err, "path", path)
+		return common.NewBasicError(ErrLoadingConfig, err, "path", path)
 	}
-	var config Config
-	err = json.Unmarshal(data, &config)
+	err = json.Unmarshal(data, &ApnadConfig)
 	if err != nil {
-		return nil, common.NewBasicError(ErrParsingConfig, err, "path", path)
+		return common.NewBasicError(ErrParsingConfig, err, "path", path)
 	}
-	return &config, nil
+	return nil
 }

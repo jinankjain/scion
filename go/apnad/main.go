@@ -21,12 +21,13 @@ func main() {
 		flag.Usage()
 		os.Exit(1)
 	}
-	config, err := apnad.LoadConfig(*flagConfig)
+	err := apnad.LoadConfig(*flagConfig)
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(1)
 	}
-	err = internal.ListenAndServe(config.IP, config.Port)
+	internal.Init()
+	err = internal.ListenAndServe(apnad.ApnadConfig.IP, apnad.ApnadConfig.Port)
 	if err != nil {
 		log.Error(err.Error())
 		os.Exit(1)

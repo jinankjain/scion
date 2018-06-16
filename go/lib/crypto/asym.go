@@ -15,23 +15,22 @@
 package crypto
 
 import (
+	"crypto/rand"
 	"strings"
 
 	"golang.org/x/crypto/ed25519"
+	"golang.org/x/crypto/nacl/box"
 
 	"github.com/scionproto/scion/go/lib/common"
 )
 
-// Available asymmetric crypto algorithms. The values must be lower case.
 const (
 	Ed25519                    = "ed25519"
 	Curve25519xSalsa20Poly1305 = "curve25519xsalsa20poly1305"
-)
-
-const (
-	InvalidKeySize      = "Invalid key size"
-	UnsupportedSignAlgo = "Unsupported signing algorithm"
-	InvalidSignature    = "Invalid signature"
+	InvalidKeySize             = "Invalid key size"
+	UnsupportedSignAlgo        = "Unsupported signing algorithm"
+	InvalidSignature           = "Invalid signature"
+	FailedToGenerateKeyPairs   = "Failed to generate key pairs"
 )
 
 // Sign takes a signature input and a signing key to create a signature. Currently only
@@ -64,5 +63,48 @@ func Verify(sigInput, sig, verifyKey common.RawBytes, signAlgo string) error {
 		return nil
 	default:
 		return common.NewBasicError(UnsupportedSignAlgo, nil, "algo", signAlgo)
+	}
+}
+
+// GenKeyPairs generates public/private keys pairs
+func GenKeyPairs(keygenAlgo string) (common.RawBytes, common.RawBytes, error) {
+	switch strings.ToLower(keygenAlgo) {
+	case Curve25519xSalsa20Poly1305:
+		pubkey, privkey, err := box.GenerateKey(rand.Reader)
+		if err != nil {
+			return nil, nil, common.NewBasicError(FailedToGenerateKeyPairs, err,
+				"keygenAlgo", keygenAlgo)
+		}
+		return pubkey[:], privkey[:], nil
+	case Ed25519:
+		pubkey, privkey, err := ed25519.GenerateKey(rand.Reader)
+		if err != nil {
+			return nil, nil, common.NewBasicError(FailedToGenerateKeyPairs, err,
+				"keygenAlgo", keygenAlgo)
+		}
+		return common.RawBytes(pubkey), common.RawBytes(privkey), nil
+	default:
+		return nil, nil, common.NewBasicError(UnsupportedSignAlgo, nil, "algo", keygenAlgo)
+	}
+}
+
+// GenSharedSecret generates common secret for a given pairs of keys
+func GenSharedSecret(pubkey common.RawBytes, privkey common.RawBytes, algo string) (common.RawBytes,
+	error) {
+	switch strings.ToLower(algo) {
+	case Curve25519xSalsa20Poly1305:
+		if len(pubkey) != 32 || len(privkey) != 32 {
+			return nil, common.NewBasicError(InvalidKeySize, nil, "algo", algo)
+		}
+		var pub, priv, secret *[32]byte
+		for _, i := range pubkey {
+			pub[i] = pubkey[i]
+			priv[i] = privkey[i]
+		}
+		secret = new([32]byte)
+		box.Precompute(secret, pub, priv)
+		return secret[:], nil
+	default:
+		return nil, common.NewBasicError(UnsupportedSignAlgo, nil, "algo", algo)
 	}
 }
