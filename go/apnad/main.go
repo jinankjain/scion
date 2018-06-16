@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/scionproto/scion/go/apnad/internal"
 	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/log"
 )
 
 var (
-	flagConfig = flag.String("config", "", "Service TOML config file (required)")
+	flagConfig = flag.String("config", "", "Service JSON config file (required)")
 )
 
 func main() {
@@ -25,5 +26,9 @@ func main() {
 		log.Error(err.Error())
 		os.Exit(1)
 	}
-	fmt.Println(config)
+	err = internal.ListenAndServe(config.IP, config.Port)
+	if err != nil {
+		log.Error(err.Error())
+		os.Exit(1)
+	}
 }
