@@ -40,7 +40,7 @@ func (c EphIDGenerationErrorCode) String() string {
 	case ErrorEphIDGenOk:
 		return "OK"
 	case ErrorGenerateHostID:
-		return "Unable to generate HostID"
+		return "Unable to generate HostID using siphash"
 	case ErrorEncryptEphID:
 		return "Error while encrypting EphID"
 	case ErrorMACCompute:

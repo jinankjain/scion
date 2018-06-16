@@ -52,7 +52,7 @@ func connect(ip string, port int) (*connector, error) {
 }
 
 type Connector interface {
-	EphIDGenerationRequest(kind byte) (*EphIDGenerationReply, error)
+	EphIDGenerationRequest(kind byte, addr *ServiceAddr) (*EphIDGenerationReply, error)
 }
 
 type connector struct {
@@ -65,7 +65,7 @@ func (c *connector) nextID() uint64 {
 	return atomic.AddUint64(&c.requestID, 1)
 }
 
-func (c *connector) EphIDGenerationRequest(kind byte) (*EphIDGenerationReply, error) {
+func (c *connector) EphIDGenerationRequest(kind byte, addr *ServiceAddr) (*EphIDGenerationReply, error) {
 	reply, err := c.dispatcher.Request(
 		context.Background(),
 		&Pld{
@@ -73,16 +73,31 @@ func (c *connector) EphIDGenerationRequest(kind byte) (*EphIDGenerationReply, er
 			Which: proto.APNADMsg_Which_ephIDGenerationReq,
 			EphIDGenerationReq: EphIDGenerationReq{
 				Kind: uint8(kind),
-				Addr: ServiceAddr{
-					Addr:     []byte{127, 0, 0, 1},
-					Protocol: 0x04,
-				},
+				Addr: *addr,
 			},
 		},
-		c.addr,
+		nil,
 	)
 	if err != nil {
 		return nil, err
 	}
 	return &reply.(*Pld).EphIDGenerationReply, nil
+}
+
+func (c *connector) DNSRequest(addr *ServiceAddr) (*DNSReply, error) {
+	reply, err := c.dispatcher.Request(
+		context.Background(),
+		&Pld{
+			Id:    c.nextID(),
+			Which: proto.APNADMsg_Which_dNSReq,
+			DNSReq: DNSReq{
+				Addr: *addr,
+			},
+		},
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &reply.(*Pld).DNSReply, nil
 }

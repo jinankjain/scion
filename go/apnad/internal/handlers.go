@@ -16,13 +16,11 @@ type EphIDGenerationReqHandler struct {
 
 func (h *EphIDGenerationReqHandler) Handle(pld *apnad.Pld, src net.Addr) {
 	req := pld.EphIDGenerationReq
-	log.Info("Got request", "req", req)
+	ephidReply := handleEphIDGeneration(&req)
 	reply := &apnad.Pld{
-		Id:    pld.Id,
-		Which: proto.APNADMsg_Which_ephIDGenerationReply,
-		EphIDGenerationReply: apnad.EphIDGenerationReply{
-			ErrorCode: apnad.ErrorEncryptEphID,
-		},
+		Id:                   pld.Id,
+		Which:                proto.APNADMsg_Which_ephIDGenerationReply,
+		EphIDGenerationReply: *ephidReply,
 	}
 	b, err := proto.PackRoot(reply)
 	if err != nil {
