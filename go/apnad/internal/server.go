@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/scionproto/scion/go/lib/infra/transport"
 	"github.com/scionproto/scion/go/lib/log"
 )
 
@@ -17,5 +18,6 @@ func ListenAndServe(ip net.IP, port int) error {
 		return err
 	}
 	log.Info("Started APNAD Service", "addr", serverConn.LocalAddr())
+	NewAPI(transport.NewPacketTransport(serverConn)).Serve()
 	return nil
 }

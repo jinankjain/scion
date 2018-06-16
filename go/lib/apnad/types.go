@@ -107,13 +107,13 @@ func (p *Pld) String() string {
 
 func (p *Pld) union() (interface{}, error) {
 	switch p.Which {
-	case proto.APNADMsg_Which_ephidGenerationReq:
+	case proto.APNADMsg_Which_ephIDGenerationReq:
 		return p.EphIDGenerationReq, nil
-	case proto.APNADMsg_Which_ephidGenerationReply:
+	case proto.APNADMsg_Which_ephIDGenerationReply:
 		return p.EphIDGenerationReply, nil
-	case proto.APNADMsg_Which_dnsReq:
+	case proto.APNADMsg_Which_dNSReq:
 		return p.DNSReq, nil
-	case proto.APNADMsg_Which_dnsReply:
+	case proto.APNADMsg_Which_dNSReply:
 		return p.DNSReply, nil
 	default:
 		return nil, common.NewBasicError("Unsupported APNAD union type", nil, "type", p.Which)

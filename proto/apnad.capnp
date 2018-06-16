@@ -6,10 +6,10 @@ $Go.import("github.com/scionproto/scion/go/proto");
 struct APNADMsg {
     id @0 :UInt64; #Request ID
     union {
-        ephidGenerationReq @1 :EphIDGenerationReq;
-        ephidGenerationReply @2 :EphIDGenerationReply;
-        dnsReq @3 :DNSReq;
-        dnsReply @4: DNSReply;
+        ephIDGenerationReq @1 :EphIDGenerationReq;
+        ephIDGenerationReply @2 :EphIDGenerationReply;
+        dNSReq @3 :DNSReq;
+        dNSReply @4: DNSReply;
     }
 }
 
