@@ -15,7 +15,7 @@ const (
 	GenerateSessionEphID = 0x01
 )
 
-type EphID [8]byte
+type EphID [EphIDLen]byte
 
 const (
 	SipHashKeySize = 16

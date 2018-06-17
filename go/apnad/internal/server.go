@@ -1,8 +1,6 @@
 package internal
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
 	"fmt"
 	"net"
 
@@ -14,7 +12,6 @@ import (
 )
 
 func Init() {
-	mac = hmac.New(sha256.New, apnad.ApnadConfig.HMACKey)
 	siphasher = siphash.New(apnad.ApnadConfig.SipHashKey)
 }
 

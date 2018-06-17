@@ -18,10 +18,9 @@ func main() {
 		Addr:     []byte{127, 0, 0, 1},
 		Protocol: 0x04,
 	}
-	reply, err := connector.EphIDGenerationRequest(0x00, &addr)
+	_, err = connector.EphIDGenerationRequest(0x00, &addr)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Println(reply)
 }
