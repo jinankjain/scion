@@ -2,6 +2,7 @@ package apnad
 
 import (
 	"fmt"
+	"net"
 	"strings"
 
 	"github.com/scionproto/scion/go/lib/common"
@@ -86,7 +87,7 @@ type DNSReply struct {
 }
 
 type ServiceAddr struct {
-	Addr     []byte
+	Addr     net.IP
 	Protocol uint8
 }
 
