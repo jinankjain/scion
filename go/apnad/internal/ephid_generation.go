@@ -84,6 +84,8 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 		ErrorCode: apnad.ErrorEphIDGenOk,
 		Ephid:     response,
 	}
+	dnsRegister[req.Addr.Protocol] = make(map[string][]byte)
+	dnsRegister[req.Addr.Protocol][req.Addr.Addr.String()] = response
 	log.Debug("Reply sent", "reply", reply)
 	return reply
 }

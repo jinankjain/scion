@@ -35,13 +35,11 @@ type DNSReqHandler struct {
 
 func (h *DNSReqHandler) Handle(pld *apnad.Pld, src net.Addr) {
 	req := pld.DNSReq
-	log.Info("Got Request", "req", req)
+	dnsReply := handleDNSRequest(&req)
 	reply := &apnad.Pld{
-		Id:    pld.Id,
-		Which: proto.APNADMsg_Which_dNSReply,
-		DNSReply: apnad.DNSReply{
-			ErrorCode: apnad.ErrorNoEntries,
-		},
+		Id:       pld.Id,
+		Which:    proto.APNADMsg_Which_dNSReply,
+		DNSReply: *dnsReply,
 	}
 	b, err := proto.PackRoot(reply)
 	if err != nil {

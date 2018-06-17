@@ -53,6 +53,7 @@ func connect(ip string, port int) (*connector, error) {
 
 type Connector interface {
 	EphIDGenerationRequest(kind byte, addr *ServiceAddr) (*EphIDGenerationReply, error)
+	DNSRequest(addr *ServiceAddr) (*DNSReply, error)
 }
 
 type connector struct {

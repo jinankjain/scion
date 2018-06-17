@@ -13,6 +13,7 @@ import (
 
 func Init() {
 	siphasher = siphash.New(apnad.ApnadConfig.SipHashKey)
+	dnsRegister = make(map[uint8]map[string][]byte)
 }
 
 func ListenAndServe(ip net.IP, port int) error {
