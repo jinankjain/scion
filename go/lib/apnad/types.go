@@ -73,7 +73,7 @@ type EphIDGenerationReq struct {
 
 type EphIDGenerationReply struct {
 	ErrorCode EphIDGenerationErrorCode
-	Ephid     []byte
+	Ephid     common.RawBytes
 }
 
 type DNSReq struct {
@@ -82,7 +82,7 @@ type DNSReq struct {
 
 type DNSReply struct {
 	ErrorCode DNSErrorCode
-	Ephid     []byte
+	Ephid     common.RawBytes
 }
 
 type ServiceAddr struct {

@@ -1,13 +1,12 @@
 package internal
 
 import (
-	"bytes"
+	//"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
-	"hash"
 	"io"
 
 	"github.com/scionproto/scion/go/lib/apnad"
@@ -28,10 +27,9 @@ type ApnaCertificate struct {
 	signature          []byte
 }
 
-var mac hash.Hash
-
 func computeMac(iv, finalEphID []byte) ([]byte, error) {
 	message := append(iv, finalEphID...)
+	mac := hmac.New(sha256.New, apnad.ApnadConfig.HMACKey)
 	// TODO(jinankjain): Check bound on n
 	_, err := mac.Write(message)
 	if err != nil {
@@ -41,11 +39,14 @@ func computeMac(iv, finalEphID []byte) ([]byte, error) {
 	return expectedMAC[:macLen], nil
 }
 
-func verifyMac(message, msgMac []byte) bool {
+func verifyMac(message, msgMac []byte) (bool, error) {
 	mac := hmac.New(sha256.New, apnad.ApnadConfig.HMACKey)
-	mac.Write(message)
+	_, err := mac.Write(message)
+	if err != nil {
+		return false, err
+	}
 	expectedMAC := mac.Sum(nil)
-	return bytes.Equal(expectedMAC[:macLen], msgMac)
+	return hmac.Equal(expectedMAC[:macLen], msgMac), nil
 }
 
 func decryptEphID(iv, msg []byte) (*apnad.EphID, error) {
@@ -60,8 +61,8 @@ func decryptEphID(iv, msg []byte) (*apnad.EphID, error) {
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
 	var ephID apnad.EphID
-	for i, v := range ciphertext[aes.BlockSize:] {
-		ephID[i] = msg[i] ^ v
+	for i, v := range msg {
+		ephID[i] = ciphertext[aes.BlockSize+i] ^ v
 	}
 	return &ephID, nil
 }

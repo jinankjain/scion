@@ -46,11 +46,6 @@ func main() {
 		log.Error(err.Error())
 		os.Exit(1)
 	}
-	macKey := make([]byte, apnad.HMACKeySize)
-	if _, err := io.ReadFull(rand.Reader, macKey); err != nil {
-		log.Error(err.Error())
-		os.Exit(1)
-	}
 	hmacKey := make([]byte, apnad.HMACKeySize)
 	if _, err := io.ReadFull(rand.Reader, hmacKey); err != nil {
 		log.Error(err.Error())
