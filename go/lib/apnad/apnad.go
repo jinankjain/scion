@@ -37,13 +37,13 @@ func connect(ip string, port int) (*connector, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn, err := net.DialUDP("udp", nil, addr)
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0})
 	if err != nil {
 		return nil, err
 	}
 	return &connector{
 		dispatcher: disp.New(
-			transport.NewUDPTransport(conn),
+			transport.NewPacketTransport(conn),
 			&Adapter{},
 			log.Root(),
 		),
@@ -77,7 +77,7 @@ func (c *connector) EphIDGenerationRequest(kind byte, addr *ServiceAddr) (*EphID
 				Addr: *addr,
 			},
 		},
-		nil,
+		c.addr,
 	)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (c *connector) DNSRequest(addr *ServiceAddr) (*DNSReply, error) {
 				Addr: *addr,
 			},
 		},
-		nil,
+		c.addr,
 	)
 	if err != nil {
 		return nil, err
