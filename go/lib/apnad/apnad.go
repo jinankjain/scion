@@ -56,8 +56,10 @@ type Connector interface {
 	EphIDGenerationRequest(kind byte,
 		addr *ServiceAddr,
 		pubkey common.RawBytes,
-		server uint8) (*EphIDGenerationReply, error)
+	) (*EphIDGenerationReply, error)
 	DNSRequest(addr *ServiceAddr) (*DNSReply, error)
+	DNSRegister(addr *ServiceAddr,
+		cert Certificate) (*DNSRegisterReply, error)
 }
 
 type connector struct {
@@ -73,7 +75,7 @@ func (c *connector) nextID() uint64 {
 func (c *connector) EphIDGenerationRequest(kind byte,
 	addr *ServiceAddr,
 	pubkey common.RawBytes,
-	server uint8) (*EphIDGenerationReply, error) {
+) (*EphIDGenerationReply, error) {
 	reply, err := c.dispatcher.Request(
 		context.Background(),
 		&Pld{
@@ -83,7 +85,6 @@ func (c *connector) EphIDGenerationRequest(kind byte,
 				Kind:   uint8(kind),
 				Addr:   *addr,
 				Pubkey: pubkey,
-				Server: server,
 			},
 		},
 		c.addr,
@@ -110,4 +111,25 @@ func (c *connector) DNSRequest(addr *ServiceAddr) (*DNSReply, error) {
 		return nil, err
 	}
 	return &reply.(*Pld).DNSReply, nil
+}
+
+func (c *connector) DNSRegister(addr *ServiceAddr,
+	cert Certificate) (*DNSRegisterReply, error) {
+	reply, err := c.dispatcher.Request(
+		context.Background(),
+		&Pld{
+			Id:    c.nextID(),
+			Which: proto.APNADMsg_Which_dNSRegister,
+			DNSRegister: DNSRegister{
+				Addr: *addr,
+				Cert: cert,
+			},
+		},
+		c.addr,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &reply.(*Pld).DNSRegisterReply, nil
+
 }

@@ -84,6 +84,11 @@ type Conn struct {
 	scionNet *Network
 	// Key of last used path, used to select the same path for the next packet
 	prefPathKey spathmeta.PathKey
+
+	localEphid  common.RawBytes
+	remoteEphid common.RawBytes
+
+	sharedKey common.RawBytes
 }
 
 // DialSCION calls DialSCION on the default networking context.
@@ -408,4 +413,8 @@ func (c *Conn) SetWriteDeadline(t time.Time) error {
 
 func (c *Conn) Close() error {
 	return c.conn.Close()
+}
+
+func (c *Conn) CtrlEphid() common.RawBytes {
+	return c.scionNet.ephid
 }

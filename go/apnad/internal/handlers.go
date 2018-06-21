@@ -24,7 +24,7 @@ func (h *EphIDGenerationReqHandler) Handle(pld *apnad.Pld, src net.Addr) {
 	}
 	b, err := proto.PackRoot(reply)
 	if err != nil {
-		log.Error("unable to serialize APNAMsg reply")
+		log.Error("unable to serialize APNAMsg reply", "err", err)
 	}
 	h.Transport.SendMsgTo(context.Background(), b, src)
 }

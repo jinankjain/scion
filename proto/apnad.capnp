@@ -10,6 +10,8 @@ struct APNADMsg {
         ephIDGenerationReply @2 :EphIDGenerationReply;
         dNSReq @3 :DNSReq;
         dNSReply @4: DNSReply;
+        dNSRegister @5: DNSRegister;
+        dNSRegisterReply @6: DNSRegisterReply;
     }
 }
 
@@ -17,7 +19,6 @@ struct EphIDGenerationReq {
     kind @0: UInt8;
     addr @1: ServiceAddr;
     pubkey @2: Data;
-    server @3: UInt8;
 }
 
 struct DNSReq {
@@ -32,14 +33,23 @@ struct DNSReply {
 struct Certificate {
     ephid @0: Data;
     pubkey @1: Data;
-    recvOnly @2: Bool;
+    recvOnly @2: UInt8;
     expTime @3: Data;
     signature @4: Data;
 }
 
 struct EphIDGenerationReply {
     errorCode @0: UInt8;
-    ephid @1: Data;
+    cert @1: Certificate;
+}
+
+struct DNSRegister {
+    addr @0: ServiceAddr;
+    cert @1: Certificate;
+}
+
+struct DNSRegisterReply {
+    errorCode @0: UInt8;
 }
 
 struct ServiceAddr {

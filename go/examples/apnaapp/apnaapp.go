@@ -1,36 +1,36 @@
 package main
 
 import (
-	"fmt"
-	"net"
-	"os"
+	"flag"
 
-	"github.com/scionproto/scion/go/lib/apnad"
-	"github.com/scionproto/scion/go/lib/common"
+	"github.com/scionproto/scion/go/lib/log"
+	"github.com/scionproto/scion/go/lib/sciond"
+	"github.com/scionproto/scion/go/lib/snet"
+)
+
+func getDefaultDispatcherSock() string {
+	return "/run/shm/dispatcher/default.sock"
+}
+
+var (
+	server snet.Addr
 )
 
 func main() {
-	service := apnad.NewService("127.0.0.1", 6000)
-	connector, err := service.Connect()
+	flag.Parse()
+	sciondSock := sciond.GetDefaultSCIONDPath(&server.IA)
+	dispatcher := getDefaultDispatcherSock()
+	if err := snet.Init(server.IA, sciondSock, dispatcher); err != nil {
+		log.Crit("Unable to initialize SCION network", "err", err)
+	}
+	log.Info("SCION Network successfully initialized")
+	sconn, err := snet.ListenSCION("udp4", &server)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		panic(err)
 	}
-	addr := apnad.ServiceAddr{
-		Addr:     net.IP{127, 0, 0, 1},
-		Protocol: 0x04,
-	}
-	reply, err := connector.EphIDGenerationRequest(0x00, &addr, common.RawBytes{}, 0x00)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println("EphID Reply ", reply)
-	dreply, err := connector.DNSRequest(&addr)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	fmt.Println("DNS Reply ", dreply)
+	log.Info("Local Ephid", "ephid", sconn.CtrlEphid())
+}
 
+func init() {
+	flag.Var((*snet.Addr)(&server), "local", "(Mandatory) address to listen on")
 }
