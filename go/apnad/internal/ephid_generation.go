@@ -41,6 +41,8 @@ func generateHostID(addr []byte) ([]byte, error) {
 	return siphasher.Sum(nil)[:apnad.HostIDLen], nil
 }
 
+var i2b = []bool{false, true}
+
 // handleEphIDGeneration: Generate EphID and sends it as response back
 // @param: kind -> Control vs Session EphID generation
 // @param: conn -> Connection to the management service of the host requesting EphID generation
@@ -61,7 +63,8 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 	}
 	copy(ephID[apnad.HostIDOffset:apnad.TimestampOffset], hostID)
 	// 3. Get the expiration time and append to ephID
-	copy(ephID[apnad.TimestampOffset:], getExpTime(req.Kind))
+	expTime := getExpTime(req.Kind)
+	copy(ephID[apnad.TimestampOffset:], expTime)
 	iv, encryptedEphID, err := encryptEphID(&ephID)
 	if err != nil {
 		reply := &apnad.EphIDGenerationReply{
@@ -84,8 +87,24 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 		ErrorCode: apnad.ErrorEphIDGenOk,
 		Ephid:     response,
 	}
-	dnsRegister[req.Addr.Protocol] = make(map[string][]byte)
-	dnsRegister[req.Addr.Protocol][req.Addr.Addr.String()] = response
+	if req.Server > 0 {
+		dnsRegister[req.Addr.Protocol] = make(map[string]apnad.Certificate)
+		certificate := &apnad.Certificate{
+			Ephid:    response,
+			Pubkey:   req.Pubkey,
+			RecvOnly: req.Kind,
+			ExpTime:  expTime,
+		}
+		err := certificate.Sign()
+		if err != nil {
+			reply := &apnad.EphIDGenerationReply{
+				ErrorCode: apnad.ErrorDNSRegister,
+			}
+			log.Debug("Reply sent", "reply", reply)
+			return reply
+		}
+		dnsRegister[req.Addr.Protocol][req.Addr.Addr.String()] = *certificate
+	}
 	log.Debug("Reply sent", "reply", reply)
 	return reply
 }

@@ -6,6 +6,7 @@ import (
 	"net"
 	"sync/atomic"
 
+	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/infra/disp"
 	"github.com/scionproto/scion/go/lib/infra/transport"
 	"github.com/scionproto/scion/go/lib/log"
@@ -52,7 +53,10 @@ func connect(ip string, port int) (*connector, error) {
 }
 
 type Connector interface {
-	EphIDGenerationRequest(kind byte, addr *ServiceAddr) (*EphIDGenerationReply, error)
+	EphIDGenerationRequest(kind byte,
+		addr *ServiceAddr,
+		pubkey common.RawBytes,
+		server uint8) (*EphIDGenerationReply, error)
 	DNSRequest(addr *ServiceAddr) (*DNSReply, error)
 }
 
@@ -66,15 +70,20 @@ func (c *connector) nextID() uint64 {
 	return atomic.AddUint64(&c.requestID, 1)
 }
 
-func (c *connector) EphIDGenerationRequest(kind byte, addr *ServiceAddr) (*EphIDGenerationReply, error) {
+func (c *connector) EphIDGenerationRequest(kind byte,
+	addr *ServiceAddr,
+	pubkey common.RawBytes,
+	server uint8) (*EphIDGenerationReply, error) {
 	reply, err := c.dispatcher.Request(
 		context.Background(),
 		&Pld{
 			Id:    c.nextID(),
 			Which: proto.APNADMsg_Which_ephIDGenerationReq,
 			EphIDGenerationReq: EphIDGenerationReq{
-				Kind: uint8(kind),
-				Addr: *addr,
+				Kind:   uint8(kind),
+				Addr:   *addr,
+				Pubkey: pubkey,
+				Server: server,
 			},
 		},
 		c.addr,

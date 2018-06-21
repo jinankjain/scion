@@ -21,4 +21,5 @@ const (
 	SipHashKeySize = 16
 	AESKeySize     = 16
 	HMACKeySize    = 64
+	PubkeyLen      = 32
 )

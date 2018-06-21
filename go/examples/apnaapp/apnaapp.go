@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/scionproto/scion/go/lib/apnad"
+	"github.com/scionproto/scion/go/lib/common"
 )
 
 func main() {
@@ -19,7 +20,7 @@ func main() {
 		Addr:     net.IP{127, 0, 0, 1},
 		Protocol: 0x04,
 	}
-	reply, err := connector.EphIDGenerationRequest(0x00, &addr)
+	reply, err := connector.EphIDGenerationRequest(0x00, &addr, common.RawBytes{}, 0x00)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

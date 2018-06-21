@@ -5,7 +5,7 @@ import (
 	"github.com/scionproto/scion/go/lib/log"
 )
 
-var dnsRegister map[uint8]map[string][]byte
+var dnsRegister map[uint8]map[string]apnad.Certificate
 
 func handleDNSRequest(req *apnad.DNSReq) *apnad.DNSReply {
 	log.Debug("Got request", "request", req)
@@ -18,8 +18,8 @@ func handleDNSRequest(req *apnad.DNSReq) *apnad.DNSReply {
 		return reply
 	}
 	reply := &apnad.DNSReply{
-		ErrorCode: apnad.ErrorDNSOk,
-		Ephid:     val,
+		ErrorCode:   apnad.ErrorDNSOk,
+		Certificate: val,
 	}
 	log.Debug("Reply sent", "reply", reply)
 	return reply
