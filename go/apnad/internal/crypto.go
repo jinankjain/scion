@@ -17,15 +17,6 @@ const (
 	macLen = 4
 )
 
-type ApnaCertificate struct {
-	ephID              [apnad.EphIDLen]byte
-	pubkey             [32]byte
-	ctrlOrSessionEphId bool
-	issuingAuthorityID []byte
-	issuerEphID        []byte
-	signature          []byte
-}
-
 func computeMac(iv, finalEphID []byte) ([]byte, error) {
 	message := append(iv, finalEphID...)
 	mac := hmac.New(sha256.New, apnad.ApnadConfig.HMACKey)

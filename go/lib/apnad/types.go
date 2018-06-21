@@ -34,6 +34,7 @@ const (
 	ErrorGenerateHostID
 	ErrorEncryptEphID
 	ErrorMACCompute
+	ErrorDNSRegister
 )
 
 func (c EphIDGenerationErrorCode) String() string {
@@ -46,6 +47,8 @@ func (c EphIDGenerationErrorCode) String() string {
 		return "Error while encrypting EphID"
 	case ErrorMACCompute:
 		return "Error while computing MAC"
+	case ErrorDNSRegister:
+		return "Error while generating certificate"
 	default:
 		return fmt.Sprintf("Unknown error (%v)", uint8(c))
 	}
@@ -68,8 +71,10 @@ func NewPldFromRaw(b common.RawBytes) (*Pld, error) {
 }
 
 type EphIDGenerationReq struct {
-	Kind uint8
-	Addr ServiceAddr
+	Kind   uint8
+	Addr   ServiceAddr
+	Server uint8
+	Pubkey common.RawBytes
 }
 
 type EphIDGenerationReply struct {
@@ -82,8 +87,8 @@ type DNSReq struct {
 }
 
 type DNSReply struct {
-	ErrorCode DNSErrorCode
-	Ephid     common.RawBytes
+	ErrorCode   DNSErrorCode
+	Certificate Certificate
 }
 
 type ServiceAddr struct {
@@ -126,7 +131,7 @@ func (s *ServiceAddr) String() string {
 }
 
 func (s *DNSReply) String() string {
-	return fmt.Sprintf("ErrorCode %s, Ephid %s", s.ErrorCode, s.Ephid)
+	return fmt.Sprintf("ErrorCode %s, Ephid %v", s.ErrorCode, s.Certificate)
 }
 
 func (s *EphIDGenerationReply) String() string {

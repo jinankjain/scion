@@ -16,6 +16,8 @@ struct APNADMsg {
 struct EphIDGenerationReq {
     kind @0: UInt8;
     addr @1: ServiceAddr;
+    pubkey @2: Data;
+    server @3: UInt8;
 }
 
 struct DNSReq {
@@ -24,7 +26,15 @@ struct DNSReq {
 
 struct DNSReply {
     errorCode @0: UInt8;
-    ephid @1: Data;
+    certificate @1: Certificate;
+}
+
+struct Certificate {
+    ephid @0: Data;
+    pubkey @1: Data;
+    recvOnly @2: Bool;
+    expTime @3: Data;
+    signature @4: Data;
 }
 
 struct EphIDGenerationReply {
