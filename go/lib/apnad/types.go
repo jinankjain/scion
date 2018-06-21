@@ -34,7 +34,6 @@ const (
 	ErrorGenerateHostID
 	ErrorEncryptEphID
 	ErrorMACCompute
-	ErrorDNSRegister
 )
 
 func (c EphIDGenerationErrorCode) String() string {
@@ -47,8 +46,22 @@ func (c EphIDGenerationErrorCode) String() string {
 		return "Error while encrypting EphID"
 	case ErrorMACCompute:
 		return "Error while computing MAC"
+	default:
+		return fmt.Sprintf("Unknown error (%v)", uint8(c))
+	}
+}
+
+type DNSRegisterErrorCode uint8
+
+const (
+	ErrorDNSRegisterOk DNSRegisterErrorCode = iota
+	ErrorDNSRegister
+)
+
+func (c DNSRegisterErrorCode) String() string {
+	switch c {
 	case ErrorDNSRegister:
-		return "Error while generating certificate"
+		return "Error while registering certificate"
 	default:
 		return fmt.Sprintf("Unknown error (%v)", uint8(c))
 	}
@@ -63,6 +76,8 @@ type Pld struct {
 	EphIDGenerationReply EphIDGenerationReply
 	DNSReq               DNSReq
 	DNSReply             DNSReply
+	DNSRegister          DNSRegister
+	DNSRegisterReply     DNSRegisterReply
 }
 
 func NewPldFromRaw(b common.RawBytes) (*Pld, error) {
@@ -73,13 +88,12 @@ func NewPldFromRaw(b common.RawBytes) (*Pld, error) {
 type EphIDGenerationReq struct {
 	Kind   uint8
 	Addr   ServiceAddr
-	Server uint8
 	Pubkey common.RawBytes
 }
 
 type EphIDGenerationReply struct {
 	ErrorCode EphIDGenerationErrorCode
-	Ephid     common.RawBytes
+	Cert      Certificate
 }
 
 type DNSReq struct {
@@ -89,6 +103,15 @@ type DNSReq struct {
 type DNSReply struct {
 	ErrorCode   DNSErrorCode
 	Certificate Certificate
+}
+
+type DNSRegister struct {
+	Addr ServiceAddr
+	Cert Certificate
+}
+
+type DNSRegisterReply struct {
+	ErrorCode DNSRegisterErrorCode
 }
 
 type ServiceAddr struct {
@@ -121,6 +144,10 @@ func (p *Pld) union() (interface{}, error) {
 		return p.DNSReq, nil
 	case proto.APNADMsg_Which_dNSReply:
 		return p.DNSReply, nil
+	case proto.APNADMsg_Which_dNSRegister:
+		return p.DNSReq, nil
+	case proto.APNADMsg_Which_dNSRegisterReply:
+		return p.DNSReply, nil
 	default:
 		return nil, common.NewBasicError("Unsupported APNAD union type", nil, "type", p.Which)
 	}
@@ -135,5 +162,9 @@ func (s *DNSReply) String() string {
 }
 
 func (s *EphIDGenerationReply) String() string {
-	return fmt.Sprintf("ErrorCode %s, Ephid %s", s.ErrorCode, s.Ephid)
+	return fmt.Sprintf("ErrorCode %s, Ephid %v", s.ErrorCode, s.Cert)
+}
+
+func (s *DNSRegisterReply) String() string {
+	return fmt.Sprintf("ErrorCode %s", s.ErrorCode)
 }
