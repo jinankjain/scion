@@ -1,8 +1,11 @@
-package main
+package server
 
 import (
 	"flag"
 
+	"github.com/spf13/cobra"
+
+	"github.com/scionproto/scion/go/examples/apnaapp/internal/config"
 	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/sciond"
 	"github.com/scionproto/scion/go/lib/snet"
@@ -10,6 +13,11 @@ import (
 
 func getDefaultDispatcherSock() string {
 	return "/run/shm/dispatcher/default.sock"
+}
+
+var Cmd = &cobra.Command{
+	Use:   "server",
+	Short: "Run apna server",
 }
 
 var (
@@ -38,4 +46,9 @@ func main() {
 
 func init() {
 	flag.Var((*snet.Addr)(&server), "local", "(Mandatory) address to listen on")
+	conf, err := config.LoadConfig()
+	if err != nil {
+		panic(err)
+	}
+	log.Info("Server configuration", "conf", conf)
 }
