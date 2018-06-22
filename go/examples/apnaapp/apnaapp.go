@@ -29,6 +29,11 @@ func main() {
 		panic(err)
 	}
 	log.Info("Local Ephid", "ephid", sconn.CtrlEphid())
+	reply, err := sconn.RegisterWithDNS()
+	if err != nil {
+		panic(err)
+	}
+	log.Info("Got reply", "reply", reply)
 }
 
 func init() {

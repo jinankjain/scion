@@ -60,6 +60,8 @@ const (
 
 func (c DNSRegisterErrorCode) String() string {
 	switch c {
+	case ErrorDNSRegisterOk:
+		return "OK"
 	case ErrorDNSRegister:
 		return "Error while registering certificate"
 	default:

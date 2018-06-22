@@ -34,6 +34,9 @@ func NewAPI(transport infra.Transport) *API {
 			proto.APNADMsg_Which_dNSReq: &DNSReqHandler{
 				Transport: transport,
 			},
+			proto.APNADMsg_Which_dNSRegister: &DNSRegisterHandler{
+				Transport: transport,
+			},
 		},
 	}
 }
