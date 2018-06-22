@@ -100,7 +100,7 @@ type Network struct {
 	pathResolver *pathmgr.PR
 	localIA      addr.IA
 	apnaMSConn   apnad.Connector
-	ephid        common.RawBytes
+	cert         apnad.Certificate
 	localPrivkey common.RawBytes
 	localPubkey  common.RawBytes
 }
@@ -231,13 +231,15 @@ func (n *Network) ListenSCIONWithBindSVC(network string, laddr, baddr *Addr,
 	if err != nil {
 		return nil, common.NewBasicError("Cannot generate ephid", err)
 	}
-	n.ephid = lcert.Cert.Ephid
+	n.cert = lcert.Cert
 	conn := &Conn{
 		net:        network,
 		scionNet:   n,
 		recvBuffer: make(common.RawBytes, BufSize),
 		sendBuffer: make(common.RawBytes, BufSize),
-		svc:        svc}
+		svc:        svc,
+		srvAddr:    srvaddr,
+	}
 
 	// Initialize local bind address
 	regAddr := &reliable.AppAddr{}

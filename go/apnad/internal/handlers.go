@@ -47,3 +47,22 @@ func (h *DNSReqHandler) Handle(pld *apnad.Pld, src net.Addr) {
 	}
 	h.Transport.SendMsgTo(context.Background(), b, src)
 }
+
+type DNSRegisterHandler struct {
+	Transport infra.Transport
+}
+
+func (h *DNSRegisterHandler) Handle(pld *apnad.Pld, src net.Addr) {
+	req := pld.DNSRegister
+	dnsRegisterReply := handleDNSRegister(&req)
+	reply := &apnad.Pld{
+		Id:               pld.Id,
+		Which:            proto.APNADMsg_Which_dNSRegisterReply,
+		DNSRegisterReply: *dnsRegisterReply,
+	}
+	b, err := proto.PackRoot(reply)
+	if err != nil {
+		log.Error("unable to serialize APNAMsg reply")
+	}
+	h.Transport.SendMsgTo(context.Background(), b, src)
+}
