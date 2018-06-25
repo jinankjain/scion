@@ -23,8 +23,8 @@ const (
 
 var (
 	ApnadConfigPath string
-	LocalAddr       *snet.Addr
-	RemoteAddr      *snet.Addr
+	LocalAddr       snet.Addr
+	RemoteAddr      snet.Addr
 )
 
 func LoadConfig() (*Config, error) {

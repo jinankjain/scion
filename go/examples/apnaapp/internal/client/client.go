@@ -12,7 +12,7 @@ var Cmd = &cobra.Command{
 	Short: "Run apna client",
 }
 
-func init() {
+func startClient() {
 	conf, err := config.LoadConfig()
 	if err != nil {
 		panic(err)
