@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
-	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/assert"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/hpkt"
@@ -85,13 +84,6 @@ type Conn struct {
 	scionNet *Network
 	// Key of last used path, used to select the same path for the next packet
 	prefPathKey spathmeta.PathKey
-
-	localCert  apnad.Certificate
-	remoteCert apnad.Certificate
-
-	srvAddr *apnad.ServiceAddr
-
-	sharedKey common.RawBytes
 }
 
 // DialSCION calls DialSCION on the default networking context.
@@ -416,12 +408,4 @@ func (c *Conn) SetWriteDeadline(t time.Time) error {
 
 func (c *Conn) Close() error {
 	return c.conn.Close()
-}
-
-func (c *Conn) CtrlEphid() common.RawBytes {
-	return c.scionNet.cert.Ephid
-}
-
-func (c *Conn) RegisterWithDNS() (*apnad.DNSRegisterReply, error) {
-	return c.scionNet.apnaMSConn.DNSRegister(c.srvAddr, c.scionNet.cert)
 }

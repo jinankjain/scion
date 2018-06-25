@@ -51,9 +51,7 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
-	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/common"
-	"github.com/scionproto/scion/go/lib/crypto"
 	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/pathmgr"
 	"github.com/scionproto/scion/go/lib/sciond"
@@ -99,23 +97,15 @@ type Network struct {
 	// is set to nil when operating on a SCIOND-less Network.
 	pathResolver *pathmgr.PR
 	localIA      addr.IA
-	apnaMSConn   apnad.Connector
-	cert         apnad.Certificate
-	localPrivkey common.RawBytes
-	localPubkey  common.RawBytes
 }
 
 // NewNetworkWithPR creates a new networking context with path resolver pr. A
 // nil path resolver means the Network will run without SCIOND.
-func NewNetworkWithPR(ia addr.IA, dispatcherPath string, connector apnad.Connector,
-	pubkey, privkey common.RawBytes, pr *pathmgr.PR) *Network {
+func NewNetworkWithPR(ia addr.IA, dispatcherPath string, pr *pathmgr.PR) *Network {
 	return &Network{
 		dispatcherPath: dispatcherPath,
 		pathResolver:   pr,
 		localIA:        ia,
-		apnaMSConn:     connector,
-		localPrivkey:   privkey,
-		localPubkey:    pubkey,
 	}
 }
 
@@ -143,16 +133,7 @@ func NewNetwork(ia addr.IA, sciondPath string, dispatcherPath string) (*Network,
 			return nil, common.NewBasicError("Unable to initialize path resolver", err)
 		}
 	}
-	service := apnad.NewService("127.0.0.1", 6000)
-	connector, err := service.Connect()
-	if err != nil {
-		return nil, common.NewBasicError("Failed to connect to APNAD", err)
-	}
-	pubkey, privkey, err := crypto.GenKeyPairs(crypto.Curve25519xSalsa20Poly1305)
-	if err != nil {
-		return nil, common.NewBasicError("Unable to generate pub/priv keys pairs", err)
-	}
-	return NewNetworkWithPR(ia, dispatcherPath, connector, pubkey, privkey, pathResolver), nil
+	return NewNetworkWithPR(ia, dispatcherPath, pathResolver), nil
 }
 
 // DialSCION returns a SCION connection to raddr. Nil values for laddr are not
@@ -218,27 +199,12 @@ func (n *Network) ListenSCIONWithBindSVC(network string, laddr, baddr *Addr,
 	if laddr.Host.IP().Equal(net.IPv4zero) {
 		return nil, common.NewBasicError("Binding to 0.0.0.0 not supported", nil)
 	}
-	proto, err := apnad.ProtocolStringToUint8(network)
-	if err != nil {
-		return nil, common.NewBasicError("Network not implemented", err, "net", network)
-	}
-	srvaddr := &apnad.ServiceAddr{
-		Addr:     laddr.Host.IP(),
-		Protocol: proto,
-	}
-	lcert, err := n.apnaMSConn.EphIDGenerationRequest(apnad.GenerateCtrlEphID, srvaddr,
-		n.localPubkey)
-	if err != nil {
-		return nil, common.NewBasicError("Cannot generate ephid", err)
-	}
-	n.cert = lcert.Cert
 	conn := &Conn{
 		net:        network,
 		scionNet:   n,
 		recvBuffer: make(common.RawBytes, BufSize),
 		sendBuffer: make(common.RawBytes, BufSize),
 		svc:        svc,
-		srvAddr:    srvaddr,
 	}
 
 	// Initialize local bind address

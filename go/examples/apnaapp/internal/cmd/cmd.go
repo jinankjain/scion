@@ -28,8 +28,8 @@ func Execute() {
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&config.ApnadConfigPath, "apnad", "a", ".",
 		"apnad config path")
-	RootCmd.PersistentFlags().VarP(config.LocalAddr, "local", "l", "local address")
-	RootCmd.PersistentFlags().VarP(config.RemoteAddr, "remote", "r", "remote address")
+	RootCmd.PersistentFlags().VarP(&config.LocalAddr, "local", "l", "local address")
+	RootCmd.PersistentFlags().VarP(&config.RemoteAddr, "remote", "r", "remote address")
 
 	RootCmd.AddCommand(server.Cmd)
 	RootCmd.AddCommand(client.Cmd)
