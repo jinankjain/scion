@@ -55,7 +55,17 @@ func initApnad(conf *config.Config, server *Server, network string) error {
 	if err != nil {
 		return err
 	}
+	if reply.ErrorCode != apnad.ErrorEphIDGenOk {
+		return common.NewBasicError(reply.ErrorCode.String(), nil)
+	}
 	server.CtrlCertificate = reply.Cert
+	dnsreply, err := server.Apnad.DNSRegister(srvAddr, server.CtrlCertificate)
+	if err != nil {
+		return err
+	}
+	if dnsreply.ErrorCode != apnad.ErrorDNSRegisterOk {
+		return common.NewBasicError(reply.ErrorCode.String(), nil)
+	}
 	return nil
 }
 
@@ -82,4 +92,7 @@ func startServer(args []string) {
 		panic(err)
 	}
 	log.Info("connection params", "conn", sconn.LocalSnetAddr())
+	for /* ever */ {
+		handleConnection(sconn)
+	}
 }
