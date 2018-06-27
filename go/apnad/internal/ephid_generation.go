@@ -47,7 +47,7 @@ func generateHostID(addr []byte) ([]byte, error) {
 // @param: retAddr -> Return address on which response would be send back
 // @param: registerAddr -> EphID generation for this address
 func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGenerationReply {
-	log.Debug("Got request", "request", req)
+	log.Debug("Got EphIDGeneration request", "request", req)
 	var ephID apnad.EphID
 	// 1. Copy the kind inside ephID
 	copy(ephID[apnad.TypeOffset:apnad.HostIDOffset], []byte{req.Kind})
@@ -68,7 +68,7 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 		reply := &apnad.EphIDGenerationReply{
 			ErrorCode: apnad.ErrorEncryptEphID,
 		}
-		log.Debug("Reply sent", "reply", reply)
+		log.Debug("Reply EphIDGeneration sent", "reply", reply)
 		return reply
 	}
 	mac, err := computeMac(iv, encryptedEphID)
@@ -76,7 +76,7 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 		reply := &apnad.EphIDGenerationReply{
 			ErrorCode: apnad.ErrorMACCompute,
 		}
-		log.Debug("Reply sent", "reply", reply)
+		log.Debug("Reply EphIDGeneration sent", "reply", reply)
 		return reply
 	}
 	response := append(iv, encryptedEphID...)
@@ -92,6 +92,6 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 		ErrorCode: apnad.ErrorEphIDGenOk,
 		Cert:      *cert,
 	}
-	log.Debug("Reply sent", "reply", reply)
+	log.Debug("Reply EphIDGeneration sent", "reply", reply)
 	return reply
 }

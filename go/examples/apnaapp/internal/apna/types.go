@@ -25,7 +25,10 @@ func (p *Pld) ProtoId() proto.ProtoIdType {
 }
 
 func (p *Pld) String() string {
-	desc := []string{fmt.Sprintf("Apna: Union: ")}
+	desc := []string{
+		fmt.Sprintf("LocalEphID: %s, RemoteEphID: %s, NextHeader: %d Union: ",
+			p.LocalEphID, p.RemoteEphID, p.NextHeader),
+	}
 	u1, err := p.union()
 	if err != nil {
 		desc = append(desc, err.Error())
