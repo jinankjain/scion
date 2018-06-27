@@ -74,7 +74,7 @@ func initApnad(conf *config.Config, client *Client, network string) error {
 	if dnsreply.ErrorCode != apnad.ErrorDNSOk {
 		return common.NewBasicError(reply.ErrorCode.String(), nil)
 	}
-	client.ServerCertificate = reply.Cert
+	client.ServerCertificate = dnsreply.Certificate
 	return nil
 }
 
