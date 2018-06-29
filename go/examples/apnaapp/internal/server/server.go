@@ -24,16 +24,31 @@ var Cmd = &cobra.Command{
 	},
 }
 
+type Session struct {
+	LocalPubKey         common.RawBytes
+	LocalPrivKey        common.RawBytes
+	SessionSharedSecret common.RawBytes
+	CtrlSharedSecret    common.RawBytes
+	RemotePubKey        common.RawBytes
+	LocalEphID          common.RawBytes
+	RemoteEphID         common.RawBytes
+}
+
 type Server struct {
 	Apnad            apnad.Connector
 	CtrlCertificate  apnad.Certificate
 	CtrlEphIDPrivkey common.RawBytes
+	SrvAddr          *apnad.ServiceAddr
+	SessionMap       map[string]*Session
 }
+
+var server Server
 
 func initApnad(conf *config.Config, server *Server, network string) error {
 	var err error
 	service := apnad.NewService(conf.IP.String(), conf.Port)
 	server.Apnad, err = service.Connect()
+	server.SessionMap = make(map[string]*Session)
 	if err != nil {
 		return err
 	}
@@ -50,6 +65,7 @@ func initApnad(conf *config.Config, server *Server, network string) error {
 		Addr:     config.LocalAddr.Host.IP(),
 		Protocol: proto,
 	}
+	server.SrvAddr = srvAddr
 	reply, err := server.Apnad.EphIDGenerationRequest(apnad.GenerateCtrlEphID,
 		srvAddr, pubkey)
 	if err != nil {
@@ -77,9 +93,8 @@ func startServer(args []string) {
 	}
 	log.Info("Server configuration", "conf", conf)
 	// 2. Initialize APNAD deamon
-	server := &Server{}
 	network := "udp4"
-	initApnad(conf, server, network)
+	initApnad(conf, &server, network)
 	// 3. Initialize SCION related stuff
 	sciondSock := sciond.GetDefaultSCIONDPath(&config.LocalAddr.IA)
 	dispatcher := getDefaultDispatcherSock()
@@ -93,6 +108,6 @@ func startServer(args []string) {
 	}
 	log.Info("connection params", "conn", sconn.LocalSnetAddr())
 	for /* ever */ {
-		handleConnection(sconn)
+		server.handleConnection(sconn)
 	}
 }

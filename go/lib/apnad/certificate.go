@@ -1,14 +1,27 @@
 package apnad
 
 import (
+	"fmt"
+
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/crypto"
 )
 
 const (
-	EncryptEphidLen      = 16
-	CertificateLen       = 64
-	CertificatePubKeyLen = 32
+	EncryptEphidOffset      = 0
+	EncryptEphidLen         = 16
+	PubkeyOffset            = 16
+	RecvOnlyOffset          = 32
+	RecvOnlySize            = 1
+	ExpTimeOffset           = 33
+	SignatureOffset         = 37
+	CertificateSignatureLen = 64
+	CertificatePubKeyLen    = 32
+	CertficateSize          = 117
+)
+
+const (
+	ErrInsufficientBytes = "Insufficient bytes to construct a new certificate"
 )
 
 type Certificate struct {
@@ -39,4 +52,29 @@ func (c *Certificate) Sign() error {
 
 func (c *Certificate) Verify() error {
 	return crypto.Verify(c.Bytes(), c.Signature, ApnadConfig.Pubkey, crypto.Ed25519)
+}
+
+func (c *Certificate) RawCert() common.RawBytes {
+	buf := c.Bytes()
+	buf = append(buf, c.Signature...)
+	return buf
+}
+
+func NewCertificateFromRawBytes(raw common.RawBytes) (*Certificate, error) {
+	if len(raw) != CertficateSize {
+		return nil, common.NewBasicError(ErrInsufficientBytes, nil)
+	}
+	cert := &Certificate{
+		Ephid:     raw[EncryptEphidOffset:(EncryptEphidOffset + EncryptEphidLen)],
+		Pubkey:    raw[PubkeyOffset:(PubkeyOffset + PubkeyLen)],
+		RecvOnly:  raw[RecvOnlyOffset:(RecvOnlyOffset + RecvOnlySize)][0],
+		ExpTime:   raw[ExpTimeOffset:(ExpTimeOffset + TimestampLen)],
+		Signature: raw[SignatureOffset:],
+	}
+	return cert, nil
+}
+
+func (c *Certificate) String() string {
+	return fmt.Sprintf("Ephid: %s, Pubkey: %s, RecvOnly: %x, ExpTime: %s, Signature: %s", c.Ephid,
+		c.Pubkey, c.RecvOnly, c.ExpTime, c.Signature)
 }
