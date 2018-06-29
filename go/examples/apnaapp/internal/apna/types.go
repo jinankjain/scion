@@ -18,10 +18,16 @@ type Pld struct {
 	Pubkey      common.RawBytes
 	Ecert       common.RawBytes
 	Data        common.RawBytes
+	EcertPubkey EcertPubkey
 }
 
 func (p *Pld) ProtoId() proto.ProtoIdType {
 	return proto.APNAHeader_TypeID
+}
+
+type EcertPubkey struct {
+	Ecert  common.RawBytes
+	Pubkey common.RawBytes
 }
 
 func (p *Pld) String() string {
@@ -46,6 +52,8 @@ func (p *Pld) union() (interface{}, error) {
 		return p.Ecert, nil
 	case proto.APNAHeader_Which_data:
 		return p.Data, nil
+	case proto.APNAHeader_Which_ecertPubkey:
+		return p.EcertPubkey, nil
 	default:
 		return nil, common.NewBasicError("Unsupported APNA union type", nil, "type", p.Which)
 	}
@@ -54,4 +62,8 @@ func (p *Pld) union() (interface{}, error) {
 func NewPldFromRaw(b common.RawBytes) (*Pld, error) {
 	p := &Pld{}
 	return p, proto.ParseFromRaw(p, p.ProtoId(), b)
+}
+
+func (e *EcertPubkey) String() string {
+	return fmt.Sprintf("Ecert: %s, Pubkey: %s", e.Ecert, e.Pubkey)
 }

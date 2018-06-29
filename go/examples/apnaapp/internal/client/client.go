@@ -32,7 +32,19 @@ type Client struct {
 	CtrlEphIDPrivkey  common.RawBytes
 	ServerSrvAddr     *apnad.ServiceAddr
 	ServerCertificate apnad.Certificate
+	SrvAddr           *apnad.ServiceAddr
 }
+
+type Session struct {
+	LocalEphID   common.RawBytes
+	RemoteEphID  common.RawBytes
+	LocalPrivKey common.RawBytes
+	LocalPubKey  common.RawBytes
+	RemotePubKey common.RawBytes
+	SharedSecret common.RawBytes
+}
+
+var client Client
 
 func initApnad(conf *config.Config, client *Client, network string) error {
 	var err error
@@ -54,6 +66,7 @@ func initApnad(conf *config.Config, client *Client, network string) error {
 		Addr:     config.LocalAddr.Host.IP(),
 		Protocol: proto,
 	}
+	client.SrvAddr = srvAddr
 	client.ServerSrvAddr = &apnad.ServiceAddr{
 		Addr:     config.RemoteAddr.Host.IP(),
 		Protocol: proto,
@@ -86,9 +99,8 @@ func startClient(args []string) {
 	}
 	log.Info("Client configuration", "conf", conf)
 	// 2. Initialize APNAD deamon
-	client := &Client{}
 	network := "udp4"
-	initApnad(conf, client, network)
+	initApnad(conf, &client, network)
 	// 3. Initialize SCION related stuff
 	sciondSock := sciond.GetDefaultSCIONDPath(&config.LocalAddr.IA)
 	dispatcher := getDefaultDispatcherSock()
@@ -108,6 +120,14 @@ func startClient(args []string) {
 		NextHeader:  0x00,
 		Pubkey:      client.CtrlCertificate.Pubkey,
 	}
+	sharedCtrlSecret, err := crypto.GenSharedSecret(client.ServerCertificate.Pubkey,
+		client.CtrlEphIDPrivkey, crypto.Curve25519xSalsa20Poly1305)
+	if err != nil {
+		panic(err)
+	}
+	ecert := &apna.Ecert{
+		SharedKey: sharedCtrlSecret,
+	}
 	marshal, err := proto.PackRoot(data)
 	if err != nil {
 		panic(err)
@@ -117,4 +137,81 @@ func startClient(args []string) {
 		panic(err)
 	}
 	log.Info("Bytes sent", "len", n)
+	buf := make([]byte, 1024)
+	n, err = conn.Read(buf)
+	if err != nil {
+		panic(err)
+	}
+	log.Info("Bytes received", "len", n)
+	pld, err := apna.NewPldFromRaw(buf)
+	if err != nil {
+		panic(err)
+	}
+	if pld.NextHeader != 0x01 {
+		panic("Broken handshake")
+	}
+	serverCert, err := ecert.Decrypt(pld.Ecert)
+	if err != nil {
+		panic(err)
+	}
+	sessionPubkey, sessionPrivkey, err := crypto.GenKeyPairs(crypto.Curve25519xSalsa20Poly1305)
+	if err != nil {
+		panic(err)
+	}
+	sessEphIDReply, err := client.Apnad.EphIDGenerationRequest(apnad.GenerateSessionEphID,
+		client.SrvAddr, sessionPubkey)
+	if err != nil {
+		panic(err)
+	}
+	if sessEphIDReply.ErrorCode != apnad.ErrorEphIDGenOk {
+		panic(sessEphIDReply.ErrorCode.String())
+	}
+	sessSecret, err := crypto.GenSharedSecret(serverCert.Pubkey, sessionPrivkey,
+		crypto.Curve25519xSalsa20Poly1305)
+	if err != nil {
+		panic(err)
+	}
+	sess := &Session{
+		LocalEphID:   sessEphIDReply.Cert.Ephid,
+		RemoteEphID:  serverCert.Ephid,
+		LocalPubKey:  sessionPubkey,
+		LocalPrivKey: sessionPrivkey,
+		RemotePubKey: serverCert.Pubkey,
+		SharedSecret: sessSecret,
+	}
+	log.Info("Established session", "sess", sess)
+	ecert.Cert = &sessEphIDReply.Cert
+	esessCert, err := ecert.Encrypt()
+	if err != nil {
+		panic(err)
+	}
+	partTwoReply := &apna.Pld{
+		Which:       proto.APNAHeader_Which_ecertPubkey,
+		LocalEphID:  client.CtrlCertificate.Ephid,
+		RemoteEphID: client.ServerCertificate.Ephid,
+		NextHeader:  0x02,
+		EcertPubkey: apna.EcertPubkey{
+			Ecert:  esessCert,
+			Pubkey: serverCert.Pubkey,
+		},
+		Pubkey: serverCert.Pubkey,
+	}
+	partTwoReplyBytes, err := proto.PackRoot(partTwoReply)
+	if err != nil {
+		panic(err)
+	}
+	n, err = conn.Write(partTwoReplyBytes)
+	if err != nil {
+		panic(err)
+	}
+	log.Info("Number of bytes written", "len", n)
+	n, err = conn.Read(buf)
+	if err != nil {
+		panic(err)
+	}
+	finalReply, err := apna.NewPldFromRaw(buf)
+	if err != nil {
+		panic(err)
+	}
+	log.Info("Finally", "buf", finalReply, "len", n)
 }

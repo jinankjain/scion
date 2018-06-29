@@ -16,6 +16,7 @@ package crypto
 
 import (
 	"crypto/rand"
+	"io"
 	"strings"
 
 	"golang.org/x/crypto/ed25519"
@@ -31,6 +32,7 @@ const (
 	UnsupportedSignAlgo        = "Unsupported signing algorithm"
 	InvalidSignature           = "Invalid signature"
 	FailedToGenerateKeyPairs   = "Failed to generate key pairs"
+	InvalidSecretKeySize       = "Invalid secret key size"
 )
 
 // Sign takes a signature input and a signing key to create a signature. Currently only
@@ -89,7 +91,7 @@ func GenKeyPairs(keygenAlgo string) (common.RawBytes, common.RawBytes, error) {
 }
 
 // GenSharedSecret generates common secret for a given pairs of keys
-func GenSharedSecret(pubkey common.RawBytes, privkey common.RawBytes, algo string) (common.RawBytes,
+func GenSharedSecret(pubkey, privkey common.RawBytes, algo string) (common.RawBytes,
 	error) {
 	switch strings.ToLower(algo) {
 	case Curve25519xSalsa20Poly1305:
@@ -97,13 +99,65 @@ func GenSharedSecret(pubkey common.RawBytes, privkey common.RawBytes, algo strin
 			return nil, common.NewBasicError(InvalidKeySize, nil, "algo", algo)
 		}
 		var pub, priv, secret *[32]byte
-		for _, i := range pubkey {
+		pub = new([32]byte)
+		priv = new([32]byte)
+		for i, _ := range pubkey {
 			pub[i] = pubkey[i]
 			priv[i] = privkey[i]
 		}
 		secret = new([32]byte)
 		box.Precompute(secret, pub, priv)
 		return secret[:], nil
+	default:
+		return nil, common.NewBasicError(UnsupportedSignAlgo, nil, "algo", algo)
+	}
+}
+
+func Encrypt(secretKey, message common.RawBytes, algo string) (common.RawBytes, error) {
+	switch strings.ToLower(algo) {
+	case Curve25519xSalsa20Poly1305:
+		if len(secretKey) != 32 {
+			return nil, common.NewBasicError(InvalidSecretKeySize, nil, "algo", algo)
+		}
+		var secret *[32]byte
+		secret = new([32]byte)
+		for i, v := range secretKey {
+			secret[i] = v
+		}
+		var nonce *[24]byte
+		nonce = new([24]byte)
+		if _, err := io.ReadFull(rand.Reader, (*nonce)[:]); err != nil {
+			return nil, err
+		}
+		edata := box.SealAfterPrecomputation((*nonce)[:], message, nonce, secret)
+		return edata, nil
+	default:
+		return nil, common.NewBasicError(UnsupportedSignAlgo, nil, "algo", algo)
+	}
+}
+
+func Decrypt(secretKey, edata common.RawBytes, algo string) (common.RawBytes, error) {
+	switch strings.ToLower(algo) {
+	case Curve25519xSalsa20Poly1305:
+		if len(secretKey) != 32 {
+			return nil, common.NewBasicError(InvalidSecretKeySize, nil, "algo", algo)
+		}
+		var secret *[32]byte
+		secret = new([32]byte)
+		for i, v := range secretKey {
+			secret[i] = v
+		}
+		var nonce *[24]byte
+		nonce = new([24]byte)
+		for i, _ := range nonce {
+			nonce[i] = edata[i]
+		}
+		unedata, done := box.OpenAfterPrecomputation(nil, edata[24:], nonce, secret)
+		if done {
+			return unedata, nil
+		} else {
+			return nil, common.NewBasicError("Failed to Decrypt", nil)
+		}
 	default:
 		return nil, common.NewBasicError(UnsupportedSignAlgo, nil, "algo", algo)
 	}

@@ -11,5 +11,11 @@ struct APNAHeader {
         pubkey @3: Data;
         ecert @4: Data;
         data @5: Data;
+        ecertPubkey @6: EcertPubkey;
     }
+}
+
+struct EcertPubkey {
+    ecert @0: Data;
+    pubkey @1: Data;
 }
