@@ -6,20 +6,27 @@ import (
 	"github.com/scionproto/scion/go/lib/crypto"
 )
 
-type Ecert struct {
-	Cert      *apnad.Certificate
-	SharedKey common.RawBytes
+// EncryptCert encrypts Session Certificate for APNA
+func EncryptCert(sharedKey common.RawBytes, cert *apnad.Certificate) (common.RawBytes, error) {
+	rawData := cert.RawCert()
+	return crypto.Encrypt(sharedKey, rawData, crypto.Curve25519xSalsa20Poly1305)
 }
 
-func (e *Ecert) Encrypt() (common.RawBytes, error) {
-	rawData := e.Cert.RawCert()
-	return crypto.Encrypt(e.SharedKey, rawData, crypto.Curve25519xSalsa20Poly1305)
-}
-
-func (e *Ecert) Decrypt(edata common.RawBytes) (*apnad.Certificate, error) {
-	uedata, err := crypto.Decrypt(e.SharedKey, edata, crypto.Curve25519xSalsa20Poly1305)
+// DecryptCert decrypts encrypted Session Certificate for APNA
+func DecryptCert(sharedKey common.RawBytes, ecert common.RawBytes) (*apnad.Certificate, error) {
+	rawCert, err := crypto.Decrypt(sharedKey, ecert, crypto.Curve25519xSalsa20Poly1305)
 	if err != nil {
 		return nil, err
 	}
-	return apnad.NewCertificateFromRawBytes(uedata)
+	return apnad.NewCertificateFromRawBytes(rawCert)
+}
+
+// EncryptData encrypts data associated with ApnaPayload
+func EncryptData(sharedKey common.RawBytes, data common.RawBytes) (common.RawBytes, error) {
+	return crypto.Encrypt(sharedKey, data, crypto.Curve25519xSalsa20Poly1305)
+}
+
+// DecryptData decrypts data associated with ApnaPayload
+func DecryptData(sharedKey common.RawBytes, edata common.RawBytes) (common.RawBytes, error) {
+	return crypto.Decrypt(sharedKey, edata, crypto.Curve25519xSalsa20Poly1305)
 }
