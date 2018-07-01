@@ -24,17 +24,8 @@ var Cmd = &cobra.Command{
 	},
 }
 
-type Session struct {
-	LocalPubKey         common.RawBytes
-	LocalPrivKey        common.RawBytes
-	SessionSharedSecret common.RawBytes
-	CtrlSharedSecret    common.RawBytes
-	RemotePubKey        common.RawBytes
-	LocalEphID          common.RawBytes
-	RemoteEphID         common.RawBytes
-}
-
 type Server struct {
+	conn             *snet.Conn
 	Apnad            apnad.Connector
 	CtrlCertificate  apnad.Certificate
 	CtrlEphIDPrivkey common.RawBytes
@@ -106,8 +97,9 @@ func startServer(args []string) {
 	if err != nil {
 		panic(err)
 	}
+	server.conn = sconn
 	log.Info("connection params", "conn", sconn.LocalSnetAddr())
 	for /* ever */ {
-		server.handleConnection(sconn)
+		server.handleConnection()
 	}
 }

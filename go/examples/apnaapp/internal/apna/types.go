@@ -44,6 +44,10 @@ func (p *Pld) String() string {
 	return strings.Join(desc, "")
 }
 
+func (p *Pld) RawPld() (common.RawBytes, error) {
+	return proto.PackRoot(p)
+}
+
 func (p *Pld) union() (interface{}, error) {
 	switch p.Which {
 	case proto.APNAHeader_Which_pubkey:

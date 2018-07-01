@@ -26,6 +26,7 @@ const (
 	AESKeySize     = 16
 	HMACKeySize    = 64
 	PubkeyLen      = 32
+	ApnaIDLen      = 16
 )
 
 func ProtocolStringToUint8(network string) (uint8, error) {

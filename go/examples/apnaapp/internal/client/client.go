@@ -125,9 +125,6 @@ func startClient(args []string) {
 	if err != nil {
 		panic(err)
 	}
-	ecert := &apna.Ecert{
-		SharedKey: sharedCtrlSecret,
-	}
 	marshal, err := proto.PackRoot(data)
 	if err != nil {
 		panic(err)
@@ -150,11 +147,11 @@ func startClient(args []string) {
 	if pld.NextHeader != 0x01 {
 		panic("Broken handshake")
 	}
-	serverCert, err := ecert.Decrypt(pld.Ecert)
+	serverCert, err := apna.DecryptCert(sharedCtrlSecret, pld.Ecert)
 	if err != nil {
 		panic(err)
 	}
-	sessionPubkey, sessionPrivkey, err := crypto.GenKeyPairs(crypto.Curve25519xSalsa20Poly1305)
+	sessionPubkey, sessionPrivkey, err := apnad.GenKeyPairs()
 	if err != nil {
 		panic(err)
 	}
@@ -180,8 +177,7 @@ func startClient(args []string) {
 		SharedSecret: sessSecret,
 	}
 	log.Info("Established session", "sess", sess)
-	ecert.Cert = &sessEphIDReply.Cert
-	esessCert, err := ecert.Encrypt()
+	esessCert, err := apna.EncryptCert(sharedCtrlSecret, &sessEphIDReply.Cert)
 	if err != nil {
 		panic(err)
 	}
@@ -213,5 +209,9 @@ func startClient(args []string) {
 	if err != nil {
 		panic(err)
 	}
-	log.Info("Finally", "buf", finalReply, "len", n)
+	decryptData, err := apna.DecryptData(sess.SharedSecret, finalReply.Data)
+	if err != nil {
+		panic(err)
+	}
+	log.Info("Finally", "buf", string(decryptData), "len", n)
 }
