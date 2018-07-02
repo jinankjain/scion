@@ -76,3 +76,11 @@ tags
 # HSR
 ##########################
 c/lib/hsr/build
+
+# latex
+*.aux
+*.log
+*.snm
+*.nav
+*.toc
+*.out
