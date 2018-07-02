@@ -26,7 +26,6 @@ func (s Server) handshakePartOne(data *apna.Pld, raddr *snet.Addr) {
 		panic(err)
 	}
 	sess := &Session{
-		LocalPubKey:      pub,
 		LocalPrivKey:     priv,
 		LocalEphID:       sessionEphIDGenReply.Cert.Ephid,
 		CtrlSharedSecret: ctrlEphIDSharedSecret,
@@ -65,8 +64,7 @@ func (s Server) handshakePartTwo(data *apna.Pld, raddr *snet.Addr) {
 		panic(err)
 	}
 	localSession.RemoteEphID = remoteCert.Ephid
-	localSession.RemotePubKey = remoteCert.Pubkey
-	sessionSharedKey, err := apnad.GenSharedSecret(localSession.RemotePubKey, localSession.LocalPrivKey)
+	sessionSharedKey, err := apnad.GenSharedSecret(remoteCert.Pubkey, localSession.LocalPrivKey)
 	if err != nil {
 		panic(err)
 	}
