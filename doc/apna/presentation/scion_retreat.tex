@@ -24,6 +24,8 @@
 \title{APNA in SCION} %% that will be typeset on the
 \subtitle{Accountable and Private Network Architecture} %% title page.
 \author{Jinank Jain, Taeho Lee}
+
+% Hack to remove logo
 \makeatletter
 \renewcommand\fibeamer@includeLogo[1][]{}
 \makeatother
@@ -43,30 +45,20 @@
 
   \AtBeginSection[]{% Print an outline at the beginning of sections
     \begin{frame}<beamer>
-      \frametitle{Outline for Section \thesection}
+      \frametitle{Outline}
       \tableofcontents[currentsection]
     \end{frame}}
 
   \begin{darkframes}
-    \section{Dark Frames}
-    \subsection{Blind Text}
-    \begin{frame}{Jabberwocky}
-      \framesubtitle{Lewis Carroll}%
-      \begin{tikzpicture}[overlay,remember picture]
-        \node[anchor=south east,xshift=-30pt,yshift=35pt]
-          at (current page.south east) {
-            \includegraphics[width=35mm]{resources/jabberwocky-dark}
-          };
-      \end{tikzpicture}%
-      'Twas brillig, and the slithy toves\\
-      Did gyre and gimble in the wabe;\\
-      All mimsy were the borogoves,\\
-      And the mome raths outgrabe.\\\bigskip
-
-      “Beware the Jabberwock, my son!\\
-      The jaws that bite, the claws that catch!\\
-      Beware the Jubjub bird, and shun\\
-      The frumious Bandersnatch!”\\
+    \section{What is APNA?}
+    \begin{frame}{APNA}
+      \framesubtitle{Accountable and Private Network Architecture}%
+      \begin{block}{Source Accountability}
+        This is a plain block containing some \alert{highlighted text}.
+      \end{block}
+      \begin{alertblock}{Privacy Preserving}
+        This is an alert block containing some \alert{highlighted text}.
+      \end{alertblock}
     \end{frame}
 
     \begin{frame}[label=lists]{Lists and locales}
@@ -349,57 +341,4 @@
     \end{frame}
 
   \end{darkframes}
-
-  \section{Light Frames}
-    \subsection{Blind Text}
-    \begin{frame}{Jabberwocky}
-      \framesubtitle{Lewis Carroll}%
-      \begin{tikzpicture}[overlay,remember picture]
-        \node[anchor=south east,xshift=-30pt,yshift=35pt]
-          at (current page.south east) {
-            \includegraphics[width=35mm]{resources/jabberwocky-light}
-          };
-      \end{tikzpicture}%
-      'Twas brillig, and the slithy toves\\
-      Did gyre and gimble in the wabe;\\
-      All mimsy were the borogoves,\\
-      And the mome raths outgrabe.\\\bigskip
-
-      “Beware the Jabberwock, my son!\\
-      The jaws that bite, the claws that catch!\\
-      Beware the Jubjub bird, and shun\\
-      The frumious Bandersnatch!”\\
-    \end{frame}
-    \againframe{lists}
-    \subsection{Structuring Elements}
-    \againframe{simmonshall}
-    \againframe{proof}
-    \subsection{Numerals and Mathematics}
-    \againframe{math}
-    \subsection{Figures and Code Listings}
-    \againframe{figs1}
-    \againframe{figs2}
-    \defverbatim[colored]\sleepSort{
-      \begin{lstlisting}[language=C,tabsize=2]
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-// This is a comment
-int main(int argc, char **argv)
-{
-        while (--c > 1 && !fork());
-        sleep(c = atoi(v[c]));
-        printf("%d\n", c);
-        wait(0);
-        return 0;
-}
-    \end{lstlisting}}
-  \begin{frame}{Code listings}{An example source code in C}
-      \sleepSort
-    \end{frame}
-    \subsection{Citations and Bibliography}
-    \againframe{citations}
-    \againframe{bibliography}
 \end{document}
