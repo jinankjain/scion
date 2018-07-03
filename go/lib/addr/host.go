@@ -30,6 +30,7 @@ const (
 	HostTypeIPv4
 	HostTypeIPv6
 	HostTypeSVC
+	HostTypeAPNA
 )
 
 func (t HostAddrType) String() string {
@@ -42,6 +43,8 @@ func (t HostAddrType) String() string {
 		return "IPv6"
 	case HostTypeSVC:
 		return "SVC"
+	case HostTypeAPNA:
+		return "APNA"
 	}
 	return fmt.Sprintf("UNKNOWN (%d)", t)
 }
@@ -51,6 +54,7 @@ const (
 	HostLenIPv4 = net.IPv4len
 	HostLenIPv6 = net.IPv6len
 	HostLenSVC  = 2
+	HostLenAPNA = 16
 )
 
 const SVCMcast = 0x8000
@@ -74,6 +78,37 @@ type HostAddr interface {
 	IP() net.IP
 	Copy() HostAddr
 	fmt.Stringer
+}
+
+// Host APNA Type
+// ****************************************
+type HostAPNA common.RawBytes
+
+var _ HostAddr = (HostAPNA)(nil)
+
+func (h HostAPNA) Size() int {
+	return HostLenAPNA
+}
+
+func (h HostAPNA) Type() HostAddrType {
+	return HostTypeAPNA
+}
+
+func (h HostAPNA) Pack() common.RawBytes {
+	return common.RawBytes(h)
+}
+
+func (h HostAPNA) IP() net.IP {
+	return nil
+}
+
+func (h HostAPNA) Copy() HostAddr {
+	r, _ := common.RawBytes(h).Copy()
+	return HostAPNA(r.(common.RawBytes))
+}
+
+func (h HostAPNA) String() string {
+	return common.RawBytes(h).String()
 }
 
 // Host None type

@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/scionproto/scion/go/examples/apnaapp/internal/apna"
+	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/log"
