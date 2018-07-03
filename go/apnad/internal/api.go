@@ -44,7 +44,6 @@ func NewAPI(transport infra.Transport) *API {
 func (srv *API) Serve() error {
 	for {
 		b, addr, err := srv.Transport.RecvFrom(context.Background())
-		log.Info("request addr", "addr", addr)
 		if err != nil {
 			return err
 		}
