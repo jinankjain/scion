@@ -27,6 +27,7 @@ import (
 	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/assert"
 	"github.com/scionproto/scion/go/lib/common"
+	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/overlay"
 	"github.com/scionproto/scion/go/lib/ringbuf"
 	"github.com/scionproto/scion/go/lib/scmp"
@@ -158,6 +159,7 @@ func (rp *RtrPkt) forwardFromExternal() (HookResult, error) {
 			IP:          rp.dstHost.IP(),
 			OverlayPort: overlay.EndhostPort,
 		}
+		log.Info("XXXXX", "dstHOP", rp.dstHost.Type())
 		rp.Egress = append(rp.Egress, EgressPair{S: rp.Ctx.LocSockOut, Dst: dst})
 		return HookContinue, nil
 	}

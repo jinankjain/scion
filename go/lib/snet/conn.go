@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
+	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/assert"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/hpkt"
@@ -164,6 +165,7 @@ func (c *Conn) read(b []byte, from bool) (int, *Addr, error) {
 	if err != nil {
 		return 0, nil, common.NewBasicError("SCION packet parse error", err)
 	}
+	log.Info("HPKT INFO", "dstHost", pkt.DstHost, "srcHost", pkt.SrcHost)
 	// Copy data, extract address
 	n, err = pkt.Pld.WritePld(b)
 	if err != nil {
@@ -300,16 +302,21 @@ func (c *Conn) write(b []byte, raddr *Addr) (int, error) {
 	udpHdr := &l4.UDP{
 		SrcPort: c.laddr.L4Port, DstPort: raddr.L4Port, TotalLen: uint16(l4.UDPLen + len(b)),
 	}
+	apnaPld, err := apna.NewPldFromRaw(b)
+	if err != nil {
+		return 0, nil
+	}
+	log.Info("***************************")
+	log.Info("Apna", "rephid", apnaPld.RemoteEphID, "ledid", apnaPld.LocalEphID)
 	pkt := &spkt.ScnPkt{
 		DstIA:   raddr.IA,
 		SrcIA:   c.laddr.IA,
-		DstHost: raddr.Host,
-		SrcHost: c.laddr.Host,
+		DstHost: addr.HostAPNA(apnaPld.RemoteEphID),
+		SrcHost: addr.HostAPNA(apnaPld.LocalEphID),
 		Path:    path,
 		L4:      udpHdr,
 		Pld:     common.RawBytes(b),
 	}
-
 	// Serialize packet to internal buffer
 	n, err := hpkt.WriteScnPkt(pkt, c.sendBuffer)
 	if err != nil {
@@ -321,13 +328,15 @@ func (c *Conn) write(b []byte, raddr *Addr) (int, error) {
 	if path == nil {
 		// Overlay next-hop is destination
 		appAddr = reliable.AppAddr{
-			Addr: pkt.DstHost,
+			Addr: raddr.Host,
 			Port: overlay.EndhostPort}
 	} else {
 		// Overlay next-hop is contained in path
 		appAddr = reliable.AppAddr{Addr: nextHopHost, Port: nextHopPort}
 	}
-
+	log.Info("**************************************************")
+	log.Info("path info", "nextHop", nextHopHost, "nextHopPort", nextHopPort)
+	log.Info("path", "path", path)
 	// Send message
 	n, err = c.conn.WriteTo(c.sendBuffer[:n], &appAddr)
 	if err != nil {

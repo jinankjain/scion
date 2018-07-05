@@ -218,7 +218,7 @@ func (r *Router) posixOutput(s *rctx.Sock, _, stopped chan struct{}) {
 		var pktsWritten int
 		if pktsWritten, err = s.Conn.WriteBatch(msgs[:toWrite]); err != nil {
 			outputWriteErrs.Inc()
-			log.Error("Error sending packet(s)", "src", src, "err", err)
+			log.Error("Error sending packet(s)", "dst", dst, "err", err)
 			// If some packets were still sent, continue processing. Otherwise:
 			if pktsWritten < 0 {
 				// If we know the error is temporary, retry sending, otherwise drop

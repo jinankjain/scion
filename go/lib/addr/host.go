@@ -99,7 +99,7 @@ func (h HostAPNA) Pack() common.RawBytes {
 }
 
 func (h HostAPNA) IP() net.IP {
-	return nil
+	return net.IPv4(127, 0, 0, 225)
 }
 
 func (h HostAPNA) Copy() HostAddr {
@@ -299,6 +299,8 @@ func HostFromRaw(b common.RawBytes, htype HostAddrType) (HostAddr, error) {
 		return HostIPv6(b[:HostLenIPv6]), nil
 	case HostTypeSVC:
 		return HostSVC(binary.BigEndian.Uint16(b)), nil
+	case HostTypeAPNA:
+		return HostAPNA(b[:HostLenAPNA]), nil
 	default:
 		return nil, common.NewBasicError(ErrorBadHostAddrType, nil, "type", htype)
 	}
@@ -322,6 +324,8 @@ func HostLen(htype HostAddrType) (uint8, error) {
 		length = HostLenIPv6
 	case HostTypeSVC:
 		length = HostLenSVC
+	case HostTypeAPNA:
+		length = HostLenAPNA
 	default:
 		return 0, common.NewBasicError(ErrorBadHostAddrType, nil, "type", htype)
 	}
@@ -334,7 +338,7 @@ func HostEq(a, b HostAddr) bool {
 
 func HostTypeCheck(t HostAddrType) bool {
 	switch t {
-	case HostTypeIPv6, HostTypeIPv4, HostTypeSVC:
+	case HostTypeIPv6, HostTypeIPv4, HostTypeSVC, HostTypeAPNA:
 		return true
 	}
 	return false

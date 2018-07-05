@@ -146,6 +146,9 @@ func (r *Router) processPacket(rp *rpkt.RtrPkt) {
 		r.handlePktError(rp, err, "Error parsing packet")
 		return
 	}
+	dstHost, _ := rp.DstHost()
+	srcHost, _ := rp.SrcHost()
+	log.Info("Packet Info", "dstHost", dstHost, "srcHost", srcHost)
 	// Validation looks for errors in the packet that didn't break basic
 	// parsing.
 	valid, err := rp.Validate()
