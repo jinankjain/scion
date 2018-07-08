@@ -121,17 +121,16 @@ func startClient(args []string) {
 	if err != nil {
 		panic(err)
 	}
-	log.Info("Bytes sent", "len", n)
 	buf := make([]byte, 1024)
 	n, err = conn.Read(buf)
 	if err != nil {
 		panic(err)
 	}
-	log.Info("Bytes received", "len", n)
 	pld, err := apna.NewPldFromRaw(buf)
 	if err != nil {
 		panic(err)
 	}
+	log.Debug("Client recieving server credentials", "server", pld)
 	msgPartTwo, err := client.handshakePartTwo(pld)
 	if err != nil {
 		panic(err)

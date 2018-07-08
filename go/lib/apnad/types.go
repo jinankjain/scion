@@ -160,13 +160,13 @@ func (s *ServiceAddr) String() string {
 }
 
 func (s *DNSReply) String() string {
-	return fmt.Sprintf("ErrorCode %s, Ephid %v", s.ErrorCode, s.Certificate)
+	return fmt.Sprintf("%s, %s", s.ErrorCode, s.Certificate.String())
 }
 
 func (s *EphIDGenerationReply) String() string {
-	return fmt.Sprintf("ErrorCode %s, Ephid %v", s.ErrorCode, s.Cert)
+	return fmt.Sprintf("%s, %s", s.ErrorCode, s.Cert.String())
 }
 
 func (s *DNSRegisterReply) String() string {
-	return fmt.Sprintf("ErrorCode %s", s.ErrorCode)
+	return fmt.Sprintf("%s", s.ErrorCode)
 }
