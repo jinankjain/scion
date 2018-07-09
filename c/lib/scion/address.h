@@ -43,7 +43,8 @@ typedef struct {
 _(NONE, 0)  \
 _(IPV4, 4)  \
 _(IPV6, 16) \
-_(SVC, 2)
+_(SVC, 2) \
+_(APNA, 16)
 
 enum {
 #define _(type, len) ADDR_##type##_TYPE,

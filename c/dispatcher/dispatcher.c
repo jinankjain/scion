@@ -886,6 +886,10 @@ void deliver_udp(uint8_t *buf, int len, HostAddr *from, HostAddr *dst)
         return;
     }
 
+    if (DST_TYPE(sch) == ADDR_APNA_TYPE) {
+        zlog_info(zc, "APNA Addr types found %s", dst->addr);
+        return;
+    }
     if (DST_TYPE(sch) == ADDR_SVC_TYPE) {
         deliver_udp_svc(buf, len, from, dst);
         return;
