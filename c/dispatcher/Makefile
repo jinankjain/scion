@@ -5,7 +5,7 @@ CFLAGS ?= -Wall -Werror -g -O2
 LDFLAGS ?= -lpthread -Wl,-Bstatic -lzlog -lfilter -lscion -Wl,-Bdynamic
 
 LIB_DIR = ../lib
-INC = -I$(LIB_DIR)
+INC = -I$(LIB_DIR) -I.
 
 TARGETS = dispatcher
 INSTALL = ../../bin/dispatcher
@@ -19,7 +19,7 @@ clean:
 # can be recompiled if any of the included header files changed.
 -include *.d
 dispatcher: dispatcher.c
-	$(CC) $(CFLAGS) $(INC) -MMD -o $@ $< $(LDFLAGS)
+	$(CC) $(CFLAGS) $(INC) -MMD -o $@ $^ $(LDFLAGS)
 
 install: $(INSTALL)
 

@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/scionproto/scion/go/lib/common"
+	"github.com/scionproto/scion/go/lib/log"
 )
 
 const (
@@ -36,6 +37,7 @@ func LoadConfig(path string) error {
 		return common.NewBasicError(ErrLoadingConfig, err, "path", path)
 	}
 	err = json.Unmarshal(data, &ApnadConfig)
+	log.Info("APNA config", "SipHashKey", ApnadConfig.SipHashKey)
 	if err != nil {
 		return common.NewBasicError(ErrParsingConfig, err, "path", path)
 	}

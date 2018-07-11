@@ -26,6 +26,7 @@
 #include <uthash.h>
 
 #include "scion/scion.h"
+#include "ephid.h"
 
 #define APP_BUFSIZE 32
 #define DATA_BUFSIZE 65535
@@ -83,6 +84,12 @@ typedef struct {
     UT_hash_handle hh;
     UT_hash_handle bindhh;
 } SVCEntry;
+
+typedef struct {
+    uint32_t key;
+    uint8_t addr[MAX_HOST_ADDR_LEN];
+    UT_hash_handle hh;
+} SipHashToHost;
 
 typedef struct Entry {
     L4Key l4_key;
@@ -193,7 +200,9 @@ int main(int argc, char **argv)
     chk_udp_input = mk_chk_input(UDP_CHK_INPUT_SIZE);
 
     zlog_info(zc, "dispatcher with zlog starting up");
-
+    uint8_t temp[16] = {0xc3, 0x3d, 0xd8, 0x7f, 0x68, 0x60, 0xad, 0x81,
+                        0x25, 0x39, 0x31, 0x5d, 0x1d, 0x10, 0xe0, 0x71};
+    zlog_info(zc, "Decrypt Ephid %X", decrypt_host_id(temp));
     if (create_sockets() < 0)
         return -1;
 
@@ -886,10 +895,6 @@ void deliver_udp(uint8_t *buf, int len, HostAddr *from, HostAddr *dst)
         return;
     }
 
-    if (DST_TYPE(sch) == ADDR_APNA_TYPE) {
-        zlog_info(zc, "APNA Addr types found %s", dst->addr);
-        return;
-    }
     if (DST_TYPE(sch) == ADDR_SVC_TYPE) {
         deliver_udp_svc(buf, len, from, dst);
         return;
@@ -899,8 +904,13 @@ void deliver_udp(uint8_t *buf, int len, HostAddr *from, HostAddr *dst)
     /* Find dst info in packet */
     key.port = ntohs(*(uint16_t *)(l4ptr + 2));
     key.isd_as = get_dst_isd_as(buf);
-    memcpy(key.host, get_dst_addr(buf), get_dst_len(buf));
-
+    if (DST_TYPE(sch) == ADDR_APNA_TYPE) {
+        uint8_t temp[4] = {127, 0, 0, 1};
+        memcpy(key.host, temp, 4);
+        zlog_debug(zc, "APNA Addr types found %s", dst->addr);
+    }else {
+        memcpy(key.host, get_dst_addr(buf), get_dst_len(buf));
+    }
     Entry *e;
     HASH_FIND(hh, udp_port_list, &key, sizeof(key), e);
     if (!e) {

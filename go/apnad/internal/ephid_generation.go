@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/binary"
 	"hash"
+	"net"
 	"time"
 
 	"github.com/scionproto/scion/go/lib/apnad"
@@ -32,9 +33,9 @@ func getExpTime(kind uint8) []byte {
 	return bs
 }
 
-func generateHostID(addr []byte) ([]byte, error) {
+func generateHostID(addr net.IP) (common.RawBytes, error) {
 	// TODO(jinankjain): Check bound on n
-	_, err := siphasher.Write(addr)
+	_, err := siphasher.Write(addr.To4())
 	if err != nil {
 		return nil, common.NewBasicError(apnad.ErrorGenerateHostID.String(), err)
 	}
