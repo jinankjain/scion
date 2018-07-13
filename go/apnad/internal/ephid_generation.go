@@ -9,6 +9,8 @@ import (
 	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/log"
+
+	"github.com/dchest/siphash"
 )
 
 var siphasher hash.Hash64
@@ -35,11 +37,12 @@ func getExpTime(kind uint8) []byte {
 
 func generateHostID(addr net.IP) (common.RawBytes, error) {
 	// TODO(jinankjain): Check bound on n
-	_, err := siphasher.Write(addr.To4())
-	if err != nil {
-		return nil, common.NewBasicError(apnad.ErrorGenerateHostID.String(), err)
-	}
-	return siphasher.Sum(nil)[:apnad.HostIDLen], nil
+	k1 := binary.LittleEndian.Uint64(apnad.ApnadConfig.SipHashKey[:8])
+	k2 := binary.LittleEndian.Uint64(apnad.ApnadConfig.SipHashKey[8:])
+	hash := siphash.Hash(k1, k2, addr.To4())
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, hash)
+	return b[:apnad.HostIDLen], nil
 }
 
 // handleEphIDGeneration: Generate EphID and sends it as response back

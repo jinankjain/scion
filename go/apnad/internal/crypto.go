@@ -9,8 +9,6 @@ import (
 	"io"
 
 	"github.com/scionproto/scion/go/lib/apnad"
-	"github.com/scionproto/scion/go/lib/common"
-	"github.com/scionproto/scion/go/lib/log"
 )
 
 const (

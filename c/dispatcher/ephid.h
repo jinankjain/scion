@@ -47,6 +47,6 @@ uint32_t decrypt_host_id(const uint8_t *buf) {
 const char siphash_key[16] = {0xda, 0xe7, 0xac, 0xe5, 0xb7, 0x72, 0x3b, 0xd4,
                               0xec, 0x59, 0x86, 0xa8, 0xd2, 0x5f, 0x12, 0xc6};
 
-uint32_t add_service_addr(const uint8_t *src, unsigned long src_sz) {
+uint32_t service_addr_to_siphash(const uint8_t *src, unsigned long src_sz) {
     return siphash24(src, src_sz, siphash_key) & ((1 << 25) - 1);
 }

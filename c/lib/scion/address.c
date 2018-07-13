@@ -141,6 +141,7 @@ void format_host(int addr_type, uint8_t *addr, char *buf, int size) {
             return;
         case ADDR_APNA_TYPE:
             af = AF_INET6;
+            break;
         default:
             snprintf(buf, size, "UNKNOWN");
             return;

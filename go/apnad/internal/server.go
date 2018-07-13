@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/dchest/siphash"
-
 	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/infra/transport"
 	"github.com/scionproto/scion/go/lib/log"
 )
 
 func Init() {
-	siphasher = siphash.New(apnad.ApnadConfig.SipHashKey)
 	dnsRegister = make(map[uint8]map[string]apnad.Certificate)
 }
 
