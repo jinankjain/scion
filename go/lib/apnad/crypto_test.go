@@ -1,4 +1,4 @@
-package internal
+package apnad
 
 import (
 	"crypto/rand"
@@ -7,13 +7,12 @@ import (
 
 	. "github.com/smartystreets/goconvey/convey"
 
-	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/xtest"
 )
 
 type testEncryption struct {
 	scenario   string
-	ephid      apnad.EphID
+	ephid      EphID
 	encryptErr string
 	decryptErr string
 }
@@ -27,7 +26,7 @@ type testMac struct {
 }
 
 func setupTest() {
-	apnad.LoadConfig("../testdata/apnad.json")
+	LoadConfig("testdata/apnad.json")
 	Init()
 }
 
@@ -37,19 +36,19 @@ func TestEncryptEphID(t *testing.T) {
 		tests := []testEncryption{
 			{
 				scenario:   "With normal parameters",
-				ephid:      apnad.EphID{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08},
+				ephid:      EphID{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08},
 				encryptErr: "",
 				decryptErr: "",
 			},
 		}
 		for _, test := range tests {
 			Convey(test.scenario, func() {
-				iv, finalEphID, encryptErr := encryptEphID(&test.ephid)
+				iv, finalEphID, encryptErr := EncryptEphID(&test.ephid)
 				if test.encryptErr != "" {
 					So(encryptErr.Error(), ShouldEqual, test.encryptErr)
 				} else {
 					So(encryptErr, ShouldBeNil)
-					ephid, decryptErr := decryptEphID(iv, finalEphID)
+					ephid, decryptErr := DecryptEphID(iv, finalEphID)
 					if test.decryptErr != "" {
 						So(decryptErr.Error(), ShouldEqual, test.decryptErr)
 					} else {
@@ -75,7 +74,7 @@ func TestMacComputation(t *testing.T) {
 		tests := []testMac{
 			{
 				scenario:   "With normal parameters",
-				finalEphID: generateRandom(t, apnad.EphIDLen),
+				finalEphID: generateRandom(t, EphIDLen),
 				iv:         generateRandom(t, ivLen),
 				computeErr: "",
 				verifyErr:  "",
@@ -83,13 +82,13 @@ func TestMacComputation(t *testing.T) {
 		}
 		for _, test := range tests {
 			Convey(test.scenario, func() {
-				mac, macErr := computeMac(test.iv, test.finalEphID)
+				mac, macErr := ComputeMac(test.iv, test.finalEphID)
 				if test.computeErr != "" {
 					So(macErr.Error(), ShouldEqual, test.computeErr)
 				} else {
 					So(macErr, ShouldBeNil)
 					msg := append(test.iv, test.finalEphID...)
-					result, verifyErr := verifyMac(msg, mac)
+					result, verifyErr := VerifyMac(msg, mac)
 					if test.verifyErr != "" {
 						So(verifyErr.Error(), ShouldEqual, test.verifyErr)
 						So(result, ShouldBeFalse)

@@ -99,7 +99,7 @@ func (h HostAPNA) Pack() common.RawBytes {
 }
 
 func (h HostAPNA) IP() net.IP {
-	return net.IPv4(127, 0, 0, 225)
+	return net.IPv4(127, 0, 0, 1)
 }
 
 func (h HostAPNA) Copy() HostAddr {

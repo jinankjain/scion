@@ -67,7 +67,7 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 	// 3. Get the expiration time and append to ephID
 	expTime := getExpTime(req.Kind)
 	copy(ephID[apnad.TimestampOffset:], expTime)
-	iv, encryptedEphID, err := encryptEphID(&ephID)
+	iv, encryptedEphID, err := apnad.EncryptEphID(&ephID)
 	if err != nil {
 		reply := &apnad.EphIDGenerationReply{
 			ErrorCode: apnad.ErrorEncryptEphID,
@@ -75,7 +75,7 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 		log.Debug("Reply EphIDGeneration sent", "reply", reply)
 		return reply
 	}
-	mac, err := computeMac(iv, encryptedEphID)
+	mac, err := apnad.ComputeMac(iv, encryptedEphID)
 	if err != nil {
 		reply := &apnad.EphIDGenerationReply{
 			ErrorCode: apnad.ErrorMACCompute,
