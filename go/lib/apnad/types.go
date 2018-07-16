@@ -51,6 +51,24 @@ func (c EphIDGenerationErrorCode) String() string {
 	}
 }
 
+type SiphashToHostErrorCode uint8
+
+const (
+	ErrorSiphashToHostOk SiphashToHostErrorCode = iota
+	ErrorSiphashToHostNotFound
+)
+
+func (c SiphashToHostErrorCode) String() string {
+	switch c {
+	case ErrorSiphashToHostOk:
+		return "OK"
+	case ErrorSiphashToHostNotFound:
+		return "Siphash Not Found"
+	default:
+		return fmt.Sprintf("Unknown error (%v)", uint8(c))
+	}
+}
+
 type DNSRegisterErrorCode uint8
 
 const (
@@ -80,11 +98,22 @@ type Pld struct {
 	DNSReply             DNSReply
 	DNSRegister          DNSRegister
 	DNSRegisterReply     DNSRegisterReply
+	SiphashToHostReq     SiphashToHostReq
+	SiphashToHostReply   SiphashToHostReply
 }
 
 func NewPldFromRaw(b common.RawBytes) (*Pld, error) {
 	p := &Pld{}
 	return p, proto.ParseFromRaw(p, p.ProtoId(), b)
+}
+
+type SiphashToHostReq struct {
+	Siphash common.RawBytes
+}
+
+type SiphashToHostReply struct {
+	ErrorCode SiphashToHostErrorCode
+	Host      net.IP
 }
 
 type EphIDGenerationReq struct {
@@ -150,6 +179,10 @@ func (p *Pld) union() (interface{}, error) {
 		return p.DNSReq, nil
 	case proto.APNADMsg_Which_dNSRegisterReply:
 		return p.DNSReply, nil
+	case proto.APNADMsg_Which_siphashToHostReq:
+		return p.SiphashToHostReq, nil
+	case proto.APNADMsg_Which_siphashToHostReply:
+		return p.SiphashToHostReply, nil
 	default:
 		return nil, common.NewBasicError("Unsupported APNAD union type", nil, "type", p.Which)
 	}
@@ -169,4 +202,8 @@ func (s *EphIDGenerationReply) String() string {
 
 func (s *DNSRegisterReply) String() string {
 	return fmt.Sprintf("ErrorCode %s", s.ErrorCode)
+}
+
+func (s *SiphashToHostReq) String() string {
+	return fmt.Sprintf("Siphash %s", s.Siphash)
 }

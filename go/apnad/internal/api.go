@@ -37,6 +37,9 @@ func NewAPI(transport infra.Transport) *API {
 			proto.APNADMsg_Which_dNSRegister: &DNSRegisterHandler{
 				Transport: transport,
 			},
+			proto.APNADMsg_Which_siphashToHostReq: &SiphashToHostHandler{
+				Transport: transport,
+			},
 		},
 	}
 }

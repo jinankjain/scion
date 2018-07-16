@@ -62,8 +62,8 @@ func DecryptEphID(iv, msg []byte) (*EphID, error) {
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
 	var ephID EphID
-	for i, v := range msg {
-		ephID[i] = ciphertext[aes.BlockSize+i] ^ v
+	for i := 0; i < EphIDLen; i++ {
+		ephID[i] = ciphertext[aes.BlockSize+i] ^ msg[i]
 	}
 	return &ephID, nil
 }

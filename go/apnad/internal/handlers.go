@@ -29,6 +29,25 @@ func (h *EphIDGenerationReqHandler) Handle(pld *apnad.Pld, src net.Addr) {
 	h.Transport.SendMsgTo(context.Background(), b, src)
 }
 
+type SiphashToHostHandler struct {
+	Transport infra.Transport
+}
+
+func (h *SiphashToHostHandler) Handle(pld *apnad.Pld, src net.Addr) {
+	req := pld.SiphashToHostReq
+	siphashReply := handleSiphashToHost(&req)
+	reply := &apnad.Pld{
+		Id:                 pld.Id,
+		Which:              proto.APNADMsg_Which_siphashToHostReply,
+		SiphashToHostReply: *siphashReply,
+	}
+	b, err := proto.PackRoot(reply)
+	if err != nil {
+		log.Error("unable to serialize APNADMsg reply", "err", err)
+	}
+	h.Transport.SendMsgTo(context.Background(), b, src)
+}
+
 type DNSReqHandler struct {
 	Transport infra.Transport
 }

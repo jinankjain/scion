@@ -22,9 +22,11 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/scionproto/scion/go/border/apnams"
 	"github.com/scionproto/scion/go/border/metrics"
 	"github.com/scionproto/scion/go/border/rcmn"
 	"github.com/scionproto/scion/go/lib/addr"
+	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/assert"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/log"
@@ -154,12 +156,28 @@ func (rp *RtrPkt) forwardFromExternal() (HookResult, error) {
 	if onLastSeg && rp.dstIA.Eq(rp.Ctx.Conf.IA) {
 		// Destination is a host in the local ISD-AS.
 		ot := overlay.OverlayFromIP(rp.dstHost.IP(), rp.Ctx.Conf.Topo.Overlay)
+		log.Info("XXXXX", "dstHOP", rp.dstHost.Type())
 		dst := &topology.AddrInfo{
 			Overlay:     ot,
-			IP:          rp.dstHost.IP(),
 			OverlayPort: overlay.EndhostPort,
 		}
-		log.Info("XXXXX", "dstHOP", rp.dstHost.Type())
+		if rp.dstHost.Type() == addr.HostTypeAPNA {
+			ephid1 := rp.dstHost.Copy().Pack()
+			ephid2 := make([]byte, len(ephid1))
+			copy(ephid2, ephid1)
+			decryptEphid, err := apnad.DecryptEphID(ephid1[:apnad.IvLen],
+				ephid2[apnad.IvLen:apnad.IvPad])
+			if err != nil {
+				return HookError, err
+			}
+			host, err := apnams.SiphashToHost(decryptEphid[1:4])
+			if err != nil {
+				return HookError, err
+			}
+			dst.IP = host
+		} else {
+			dst.IP = rp.dstHost.IP()
+		}
 		rp.Egress = append(rp.Egress, EgressPair{S: rp.Ctx.LocSockOut, Dst: dst})
 		return HookContinue, nil
 	}

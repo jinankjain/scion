@@ -35,6 +35,8 @@ func getExpTime(kind uint8) []byte {
 	return bs
 }
 
+var mapSiphashToHost map[string]net.IP
+
 func generateHostID(addr net.IP) (common.RawBytes, error) {
 	// TODO(jinankjain): Check bound on n
 	k1 := binary.LittleEndian.Uint64(apnad.ApnadConfig.SipHashKey[:8])
@@ -43,6 +45,23 @@ func generateHostID(addr net.IP) (common.RawBytes, error) {
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, hash)
 	return b[:apnad.HostIDLen], nil
+}
+
+func handleSiphashToHost(req *apnad.SiphashToHostReq) *apnad.SiphashToHostReply {
+	log.Debug("Got SiphashToHost Request", "request", req)
+	if val, ok := mapSiphashToHost[req.Siphash.String()]; ok {
+		reply := &apnad.SiphashToHostReply{
+			ErrorCode: apnad.ErrorSiphashToHostOk,
+			Host:      val,
+		}
+		log.Debug("Reply EphIDGeneration sent", "reply", reply)
+		return reply
+	}
+	reply := &apnad.SiphashToHostReply{
+		ErrorCode: apnad.ErrorSiphashToHostNotFound,
+	}
+	log.Debug("Reply EphIDGeneration sent", "reply", reply)
+	return reply
 }
 
 // handleEphIDGeneration: Generate EphID and sends it as response back
@@ -63,6 +82,8 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 		}
 		return reply
 	}
+	mapSiphashToHost[hostID.String()] = req.Addr.Addr
+	log.Info("Siphasher", "hpstID", hostID)
 	copy(ephID[apnad.HostIDOffset:apnad.TimestampOffset], hostID)
 	// 3. Get the expiration time and append to ephID
 	expTime := getExpTime(req.Kind)

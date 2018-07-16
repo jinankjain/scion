@@ -12,6 +12,8 @@ struct APNADMsg {
         dNSReply @4: DNSReply;
         dNSRegister @5: DNSRegister;
         dNSRegisterReply @6: DNSRegisterReply;
+        siphashToHostReq @7: SiphashToHostReq;
+        siphashToHostReply @8: SiphashToHostReply;
     }
 }
 
@@ -55,4 +57,13 @@ struct DNSRegisterReply {
 struct ServiceAddr {
     addr @0 :Data;
     protocol @1: UInt8;
+}
+
+struct SiphashToHostReq {
+    siphash @0: Data;
+}
+
+struct SiphashToHostReply {
+    errorCode @0: UInt8;
+    host @1: Data;
 }

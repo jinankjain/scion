@@ -60,6 +60,7 @@ type Connector interface {
 	DNSRequest(addr *ServiceAddr) (*DNSReply, error)
 	DNSRegister(addr *ServiceAddr,
 		cert Certificate) (*DNSRegisterReply, error)
+	SiphashToHostRequest(siphash common.RawBytes) (*SiphashToHostReply, error)
 }
 
 type connector struct {
@@ -131,5 +132,22 @@ func (c *connector) DNSRegister(addr *ServiceAddr,
 		return nil, err
 	}
 	return &reply.(*Pld).DNSRegisterReply, nil
+}
 
+func (c *connector) SiphashToHostRequest(siphash common.RawBytes) (*SiphashToHostReply, error) {
+	reply, err := c.dispatcher.Request(
+		context.Background(),
+		&Pld{
+			Id:    c.nextID(),
+			Which: proto.APNADMsg_Which_siphashToHostReq,
+			SiphashToHostReq: SiphashToHostReq{
+				Siphash: siphash,
+			},
+		},
+		c.addr,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &reply.(*Pld).SiphashToHostReply, nil
 }

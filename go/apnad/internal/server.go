@@ -11,6 +11,7 @@ import (
 
 func Init() {
 	dnsRegister = make(map[uint8]map[string]apnad.Certificate)
+	mapSiphashToHost = make(map[string]net.IP)
 }
 
 func ListenAndServe(ip net.IP, port int) error {

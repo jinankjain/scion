@@ -1,13 +1,10 @@
 package apnad
 
 import (
-	"crypto/rand"
-	"io"
+	"fmt"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
-
-	"github.com/scionproto/scion/go/lib/xtest"
 )
 
 type testEncryption struct {
@@ -25,9 +22,8 @@ type testMac struct {
 	verifyErr  string
 }
 
-func setupTest() {
+func setupCryptoTest() {
 	LoadConfig("testdata/apnad.json")
-	Init()
 }
 
 func TestEncryptEphID(t *testing.T) {
@@ -49,23 +45,17 @@ func TestEncryptEphID(t *testing.T) {
 				} else {
 					So(encryptErr, ShouldBeNil)
 					ephid, decryptErr := DecryptEphID(iv, finalEphID)
+					fmt.Printf("%x", ephid[:])
 					if test.decryptErr != "" {
 						So(decryptErr.Error(), ShouldEqual, test.decryptErr)
 					} else {
 						So(decryptErr, ShouldBeNil)
 					}
-					So(*ephid, ShouldEqual, test.ephid)
+					So(*ephid, ShouldResemble, test.ephid)
 				}
 			})
 		}
 	})
-}
-
-func generateRandom(t *testing.T, size int) []byte {
-	b := make([]byte, size)
-	_, err := io.ReadFull(rand.Reader, b)
-	xtest.FailOnErr(t, err)
-	return b
 }
 
 func TestMacComputation(t *testing.T) {
@@ -75,7 +65,7 @@ func TestMacComputation(t *testing.T) {
 			{
 				scenario:   "With normal parameters",
 				finalEphID: generateRandom(t, EphIDLen),
-				iv:         generateRandom(t, ivLen),
+				iv:         generateRandom(t, IvLen),
 				computeErr: "",
 				verifyErr:  "",
 			},
