@@ -647,13 +647,6 @@ Entry * parse_request(uint8_t *buf, int len, int proto, int sock)
         e->l4_key.isd_as = isd_as;
         memcpy(e->l4_key.host, buf + common, addr_len);
         add_service_addr(service_addr_to_siphash(e->l4_key.host, addr_len), e->l4_key.host, addr_len);
-        struct siphash_to_host *st = find_service_addr(service_addr_to_siphash(e->l4_key.host, addr_len));
-        zlog_info(zc, "WTF");
-        if (st != NULL) {
-            zlog_info(zc, "Hurray %lu\n", st->host_sz);
-        }else {
-            zlog_info(zc, "FUCK MEEE!!\n");
-        }
         end = common + addr_len;
         zlog_info(zc, "registration for %s:%d", addr_to_str(e->l4_key.host, type, NULL), e->l4_key.port);
         if (IS_BIND_SOCKET(*buf)) {
