@@ -648,7 +648,7 @@ Entry * parse_request(uint8_t *buf, int len, int proto, int sock)
         memcpy(e->l4_key.host, buf + common, addr_len);
         add_service_addr(service_addr_to_siphash(e->l4_key.host, addr_len), e->l4_key.host, addr_len);
         end = common + addr_len;
-        zlog_info(zc, "registration for %s:%d", addr_to_str(e->l4_key.host, type, NULL), e->l4_key.port);
+        zlog_info(zc, "registration for %s:%d:%u", addr_to_str(e->l4_key.host, type, NULL), e->l4_key.port, service_addr_to_siphash(e->l4_key.host, addr_len));
         if (IS_BIND_SOCKET(*buf)) {
             end = add_bind_addr(e, buf, isd_as, end);
             zlog_info(zc, "bind addr %s:%d", addr_to_str(e->bind_key.host, type, NULL), e->bind_key.port);
