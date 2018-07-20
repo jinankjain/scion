@@ -16,6 +16,7 @@ package xtest
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -147,4 +148,12 @@ func MustParseAS(s string) addr.AS {
 		panic(err)
 	}
 	return ia
+}
+
+func MustParseHexString(s string) []byte {
+	decoded, err := hex.DecodeString(s)
+	if err != nil {
+		panic(err)
+	}
+	return decoded
 }

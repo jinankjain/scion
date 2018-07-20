@@ -170,6 +170,12 @@
 			"revisionTime": "2014-10-17T20:07:13Z"
 		},
 		{
+			"checksumSHA1": "61FjWZPQQ9opQCQ5sgdRp5EOqLk=",
+			"path": "github.com/jamiealquiza/tachymeter",
+			"revision": "648c1d0993ac51f0da5166710106f4c373423e13",
+			"revisionTime": "2018-05-02T17:28:56Z"
+		},
+		{
 			"checksumSHA1": "tewA7jXVGCw1zb5mA0BDecWi4iQ=",
 			"license": "MIT",
 			"path": "github.com/jtolds/gls",
