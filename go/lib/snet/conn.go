@@ -306,8 +306,6 @@ func (c *Conn) write(b []byte, raddr *Addr) (int, error) {
 	if err != nil {
 		return 0, nil
 	}
-	log.Info("***************************")
-	log.Info("Apna", "rephid", apnaPld.RemoteEphID, "ledid", apnaPld.LocalEphID)
 	pkt := &spkt.ScnPkt{
 		DstIA:   raddr.IA,
 		SrcIA:   c.laddr.IA,
@@ -334,9 +332,6 @@ func (c *Conn) write(b []byte, raddr *Addr) (int, error) {
 		// Overlay next-hop is contained in path
 		appAddr = reliable.AppAddr{Addr: nextHopHost, Port: nextHopPort}
 	}
-	log.Info("**************************************************")
-	log.Info("path info", "nextHop", nextHopHost, "nextHopPort", nextHopPort)
-	log.Info("path", "path", path)
 	// Send message
 	n, err = c.conn.WriteTo(c.sendBuffer[:n], &appAddr)
 	if err != nil {
