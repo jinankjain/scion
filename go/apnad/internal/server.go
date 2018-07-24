@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
 
@@ -12,6 +13,8 @@ import (
 func Init() {
 	dnsRegister = make(map[uint8]map[string]apnad.Certificate)
 	mapSiphashToHost = make(map[string]net.IP)
+	siphashKey1 = binary.LittleEndian.Uint64(apnad.ApnadConfig.SipHashKey[:8])
+	siphashKey2 = binary.LittleEndian.Uint64(apnad.ApnadConfig.SipHashKey[8:])
 }
 
 func ListenAndServe(ip net.IP, port int) error {

@@ -14,6 +14,8 @@ import (
 )
 
 var siphasher hash.Hash64
+var siphashKey1 uint64
+var siphashKey2 uint64
 var epoch = time.Date(2018, 1, 1, 0, 0, 0, 0, time.UTC).Unix()
 
 const (
@@ -39,9 +41,7 @@ var mapSiphashToHost map[string]net.IP
 
 func generateHostID(addr net.IP) (common.RawBytes, error) {
 	// TODO(jinankjain): Check bound on n
-	k1 := binary.LittleEndian.Uint64(apnad.ApnadConfig.SipHashKey[:8])
-	k2 := binary.LittleEndian.Uint64(apnad.ApnadConfig.SipHashKey[8:])
-	hash := siphash.Hash(k1, k2, addr.To4())
+	hash := siphash.Hash(siphashKey1, siphashKey2, addr.To4())
 	b := make([]byte, 8)
 	binary.LittleEndian.PutUint64(b, hash)
 	return b[:apnad.HostIDLen], nil
@@ -83,7 +83,6 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 		return reply
 	}
 	mapSiphashToHost[hostID.String()] = req.Addr.Addr
-	log.Info("Siphasher", "hpstID", hostID)
 	copy(ephID[apnad.HostIDOffset:apnad.TimestampOffset], hostID)
 	// 3. Get the expiration time and append to ephID
 	expTime := getExpTime(req.Kind)
