@@ -30,10 +30,10 @@ func SiphashToHost(siphash common.RawBytes) (net.IP, error) {
 		return val, nil
 	}
 	reply, err := ApnadConn.SiphashToHostRequest(siphash)
-	log.Info("QQQQ", "reply", reply, "err", err)
 	if err != nil {
 		return nil, err
 	}
+	log.Info("QQQQ", "reply", reply)
 	if reply.ErrorCode != apnad.ErrorSiphashToHostOk {
 		return nil, common.NewBasicError(reply.ErrorCode.String(), nil)
 	}

@@ -34,11 +34,11 @@ func (s *service) Connect() (Connector, error) {
 }
 
 func connect(ip string, port int) (*connector, error) {
-	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%v", port))
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%v:%v", ip, port))
 	if err != nil {
 		return nil, err
 	}
-	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0})
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(10, 0, 32, 2), Port: 0})
 	if err != nil {
 		return nil, err
 	}

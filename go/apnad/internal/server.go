@@ -18,11 +18,11 @@ func Init() {
 }
 
 func ListenAndServe(ip net.IP, port int) error {
-	serverAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%v", ip, port))
+	serverAddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:%v", ip, port))
 	if err != nil {
 		return err
 	}
-	serverConn, err := net.ListenUDP("udp", serverAddr)
+	serverConn, err := net.ListenUDP("udp4", serverAddr)
 	if err != nil {
 		return err
 	}
