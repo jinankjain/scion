@@ -51,6 +51,9 @@ typedef struct {
 // SCION Service address type
 #define ADDR_SVC_TYPE   3
 #define ADDR_SVC_LEN    2
+// APNA Address
+#define ADDR_APNA_TYPE  4
+#define ADDR_APNA_LEN   16
 
 // SVC addresses
 #define SVC_BEACON 0

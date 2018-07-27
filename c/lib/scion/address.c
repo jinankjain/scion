@@ -108,6 +108,8 @@ char *addr_type_str(int addr_type) {
             return "IPv6";
         case ADDR_SVC_TYPE:
             return "SVC";
+        case ADDR_APNA_TYPE:
+            return "APNA";
         default:
             return "UNKNOWN";
     }
@@ -134,6 +136,9 @@ void format_host(int addr_type, uint8_t *addr, char *buf, int size) {
         case ADDR_SVC_TYPE:
             snprintf(buf, size, "%d", ntohs(*(uint16_t *)addr));
             return;
+        case ADDR_APNA_TYPE:
+            af = AF_INET6;
+            break;
         default:
             snprintf(buf, size, "UNKNOWN");
             return;

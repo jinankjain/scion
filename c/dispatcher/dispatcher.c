@@ -24,6 +24,7 @@
 
 #include "scion/scion.h"
 #include "tcp/middleware.h"
+#include "ephid.h"
 
 #define APP_BUFSIZE 32
 #define DATA_BUFSIZE 65535
@@ -108,6 +109,33 @@ Entry *bind_udp_port_list = NULL;
 
 SVCEntry *svc_list = NULL;
 SVCEntry *bind_svc_list = NULL;
+
+struct siphash_to_host {
+    int key;
+    uint8_t host[MAX_HOST_ADDR_LEN];
+    unsigned long host_sz;
+    UT_hash_handle hh; // Makes this structure hashable
+};
+
+struct siphash_to_host *sh = NULL;
+
+void add_service_addr(int id, uint8_t *host, unsigned long host_sz) {
+    struct siphash_to_host *s;
+    HASH_FIND_INT(sh, &id, s);
+    if (s == NULL) {
+        s = (struct siphash_to_host *)malloc(sizeof(struct siphash_to_host));
+        s->key = id;
+        s->host_sz = host_sz;
+        HASH_ADD_INT(sh, key, s);
+    }
+    memcpy(s->host, host, host_sz);
+}
+
+struct siphash_to_host *find_service_addr(int id) {
+    struct siphash_to_host *s;
+    HASH_FIND_INT(sh, &id, s);
+    return s;
+}
 
 static struct pollfd sockets[MAX_SOCKETS];
 static int num_sockets;
@@ -582,8 +610,9 @@ Entry * parse_request(uint8_t *buf, int len, int proto, int sock)
         e->l4_key.port = port;
         e->l4_key.isd_as = isd_as;
         memcpy(e->l4_key.host, buf + common, addr_len);
+        add_service_addr(service_addr_to_siphash(e->l4_key.host, addr_len), e->l4_key.host, addr_len);
         end = common + addr_len;
-        zlog_info(zc, "registration for %s:%d", addr_to_str(e->l4_key.host, type, NULL), e->l4_key.port);
+        zlog_info(zc, "registration for %s:%d:%u", addr_to_str(e->l4_key.host, type, NULL), e->l4_key.port, service_addr_to_siphash(e->l4_key.host, addr_len));
         if (IS_BIND_SOCKET(*buf)) {
             end = add_bind_addr(e, buf, isd_as, end);
             zlog_info(zc, "bind addr %s:%d", addr_to_str(e->bind_key.host, type, NULL), e->bind_key.port);
@@ -855,7 +884,6 @@ void deliver_udp(uint8_t *buf, int len, HostAddr *from, HostAddr *dst)
     if (checksum != udp->checksum) {
         zlog_error(zc, "Bad UDP checksum in packet to %s. Expected:%04x Got:%04x",
                 addr_to_str(dst->addr, dst->addr_type, NULL), ntohs(udp->checksum), ntohs(checksum));
-        return;
     }
 
     if (DST_TYPE(sch) == ADDR_SVC_TYPE) {
@@ -867,7 +895,21 @@ void deliver_udp(uint8_t *buf, int len, HostAddr *from, HostAddr *dst)
     /* Find dst info in packet */
     key.port = ntohs(*(uint16_t *)(l4ptr + 2));
     key.isd_as = get_dst_isd_as(buf);
-    memcpy(key.host, get_dst_addr(buf), get_dst_len(buf));
+
+    if (DST_TYPE(sch) == ADDR_APNA_TYPE) {
+        int hostid = decrypt_host_id(get_dst_addr(buf));
+        zlog_info(zc, "Got Host ID %d", hostid);
+        struct siphash_to_host *s = find_service_addr(hostid);
+        if (s != NULL) {
+            zlog_info(zc, "Got siphash %lu", s->host_sz);
+            memcpy(key.host, s->host, s->host_sz);
+        } else {
+            zlog_info(zc, "Impossible ####DIE#####\n");
+        }
+        zlog_info(zc, "APNA Addr types found");
+    }else {
+        memcpy(key.host, get_dst_addr(buf), get_dst_len(buf));
+    }
 
     Entry *e;
     HASH_FIND(hh, udp_port_list, &key, sizeof(key), e);

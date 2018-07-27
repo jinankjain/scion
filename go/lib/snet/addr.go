@@ -153,3 +153,7 @@ func (a *Addr) Set(s string) error {
 	a.IA, a.Host, a.L4Port = other.IA, other.Host, other.L4Port
 	return nil
 }
+
+func (a *Addr) Type() string {
+	return "snet.Addr"
+}

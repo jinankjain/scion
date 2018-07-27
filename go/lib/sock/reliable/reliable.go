@@ -338,7 +338,7 @@ func (conn *Conn) copyNextPacket(msg *Msg) (bool, error) {
 	switch rcvdAddrType {
 	case addr.HostTypeNone:
 		// No first hop
-	case addr.HostTypeIPv4, addr.HostTypeIPv6, addr.HostTypeSVC:
+	case addr.HostTypeIPv4, addr.HostTypeIPv6, addr.HostTypeSVC, addr.HostTypeAPNA:
 		addrLenU8, _ := addr.HostLen(rcvdAddrType)
 		addrLen = int(addrLenU8)
 		// Look at 2 additional bytes for port

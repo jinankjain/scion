@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
+	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/hpkt"
 	"github.com/scionproto/scion/go/lib/l4"
@@ -288,11 +289,15 @@ func (c *Conn) write(b []byte, raddr *Addr) (int, error) {
 	udpHdr := &l4.UDP{
 		SrcPort: c.laddr.L4Port, DstPort: raddr.L4Port, TotalLen: uint16(l4.UDPLen + len(b)),
 	}
+	apnaPld, err := apna.NewPldFromRaw(b)
+	if err != nil {
+		return 0, nil
+	}
 	pkt := &spkt.ScnPkt{
 		DstIA:   raddr.IA,
 		SrcIA:   c.laddr.IA,
-		DstHost: raddr.Host,
-		SrcHost: c.laddr.Host,
+		DstHost: addr.HostAPNA(apnaPld.RemoteEphID),
+		SrcHost: addr.HostAPNA(apnaPld.LocalEphID),
 		Path:    path,
 		L4:      udpHdr,
 		Pld:     common.RawBytes(b),

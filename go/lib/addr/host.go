@@ -30,6 +30,7 @@ const (
 	HostTypeIPv4
 	HostTypeIPv6
 	HostTypeSVC
+	HostTypeAPNA
 )
 
 func (t HostAddrType) String() string {
@@ -42,6 +43,8 @@ func (t HostAddrType) String() string {
 		return "IPv6"
 	case HostTypeSVC:
 		return "SVC"
+	case HostTypeAPNA:
+		return "APNA"
 	}
 	return fmt.Sprintf("UNKNOWN (%d)", t)
 }
@@ -51,6 +54,7 @@ const (
 	HostLenIPv4 = net.IPv4len
 	HostLenIPv6 = net.IPv6len
 	HostLenSVC  = 2
+	HostLenAPNA = 16
 )
 
 const SVCMcast = 0x8000
@@ -74,6 +78,37 @@ type HostAddr interface {
 	IP() net.IP
 	Copy() HostAddr
 	fmt.Stringer
+}
+
+// Host APNA Type
+// ****************************************
+type HostAPNA common.RawBytes
+
+var _ HostAddr = (HostAPNA)(nil)
+
+func (h HostAPNA) Size() int {
+	return HostLenAPNA
+}
+
+func (h HostAPNA) Type() HostAddrType {
+	return HostTypeAPNA
+}
+
+func (h HostAPNA) Pack() common.RawBytes {
+	return common.RawBytes(h)
+}
+
+func (h HostAPNA) IP() net.IP {
+	return net.IPv4(127, 0, 0, 1)
+}
+
+func (h HostAPNA) Copy() HostAddr {
+	r, _ := common.RawBytes(h).Copy()
+	return HostAPNA(r.(common.RawBytes))
+}
+
+func (h HostAPNA) String() string {
+	return common.RawBytes(h).String()
 }
 
 // Host None type
@@ -264,6 +299,8 @@ func HostFromRaw(b common.RawBytes, htype HostAddrType) (HostAddr, error) {
 		return HostIPv6(b[:HostLenIPv6]), nil
 	case HostTypeSVC:
 		return HostSVC(binary.BigEndian.Uint16(b)), nil
+	case HostTypeAPNA:
+		return HostAPNA(b[:HostLenAPNA]), nil
 	default:
 		return nil, common.NewBasicError(ErrorBadHostAddrType, nil, "type", htype)
 	}
@@ -289,6 +326,8 @@ func HostLen(htype HostAddrType) (uint8, error) {
 		length = HostLenIPv6
 	case HostTypeSVC:
 		length = HostLenSVC
+	case HostTypeAPNA:
+		length = HostLenAPNA
 	default:
 		return 0, common.NewBasicError(ErrorBadHostAddrType, nil, "type", htype)
 	}
@@ -301,7 +340,7 @@ func HostEq(a, b HostAddr) bool {
 
 func HostTypeCheck(t HostAddrType) bool {
 	switch t {
-	case HostTypeIPv6, HostTypeIPv4, HostTypeSVC:
+	case HostTypeIPv6, HostTypeIPv4, HostTypeSVC, HostTypeAPNA:
 		return true
 	}
 	return false

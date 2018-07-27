@@ -27,6 +27,8 @@ import (
 	"os/user"
 	"syscall"
 
+	"github.com/scionproto/scion/go/border/apnams"
+	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/assert"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/log"
@@ -34,9 +36,10 @@ import (
 )
 
 var (
-	id       = flag.String("id", "", "Element ID (Required. E.g. 'br4-ff00:0:2f')")
-	confDir  = flag.String("confd", ".", "Configuration directory")
-	profFlag = flag.Bool("profile", false, "Enable cpu and memory profiling")
+	id        = flag.String("id", "", "Element ID (Required. E.g. 'br4-ff00:0:2f')")
+	confDir   = flag.String("confd", ".", "Configuration directory")
+	apnadConf = flag.String("apnad", ".", "APNAD config")
+	profFlag  = flag.Bool("profile", false, "Enable cpu and memory profiling")
 )
 
 func main() {
@@ -76,6 +79,9 @@ func main() {
 	} else {
 		log.Info("Router was built with assertions OFF.")
 	}
+	apnams.InitApnad(*apnadConf)
+	log.Info("####APNA conf", "conf", *apnadConf, "config", apnad.ApnadConfig)
+
 	log.Info("Starting up", "id", *id, "pid", os.Getpid())
 	if err := r.Run(); err != nil {
 		log.Crit("Run failed", "err", err)
