@@ -165,7 +165,6 @@ func (c *Conn) read(b []byte, from bool) (int, *Addr, error) {
 	if err != nil {
 		return 0, nil, common.NewBasicError("SCION packet parse error", err)
 	}
-	log.Info("HPKT INFO", "dstHost", pkt.DstHost, "srcHost", pkt.SrcHost)
 	// Copy data, extract address
 	n, err = pkt.Pld.WritePld(b)
 	if err != nil {
@@ -299,21 +298,31 @@ func (c *Conn) write(b []byte, raddr *Addr) (int, error) {
 	}
 
 	// Prepare packet fields
+	var pkt *spkt.ScnPkt
 	udpHdr := &l4.UDP{
 		SrcPort: c.laddr.L4Port, DstPort: raddr.L4Port, TotalLen: uint16(l4.UDPLen + len(b)),
 	}
 	apnaPld, err := apna.NewPldFromRaw(b)
 	if err != nil {
-		return 0, nil
-	}
-	pkt := &spkt.ScnPkt{
-		DstIA:   raddr.IA,
-		SrcIA:   c.laddr.IA,
-		DstHost: addr.HostAPNA(apnaPld.RemoteEphID),
-		SrcHost: addr.HostAPNA(apnaPld.LocalEphID),
-		Path:    path,
-		L4:      udpHdr,
-		Pld:     common.RawBytes(b),
+		pkt = &spkt.ScnPkt{
+			DstIA:   raddr.IA,
+			SrcIA:   c.laddr.IA,
+			DstHost: raddr.Host,
+			SrcHost: c.laddr.Host,
+			Path:    path,
+			L4:      udpHdr,
+			Pld:     common.RawBytes(b),
+		}
+	} else {
+		pkt = &spkt.ScnPkt{
+			DstIA:   raddr.IA,
+			SrcIA:   c.laddr.IA,
+			DstHost: addr.HostAPNA(apnaPld.RemoteEphID),
+			SrcHost: addr.HostAPNA(apnaPld.LocalEphID),
+			Path:    path,
+			L4:      udpHdr,
+			Pld:     common.RawBytes(b),
+		}
 	}
 	// Serialize packet to internal buffer
 	n, err := hpkt.WriteScnPkt(pkt, c.sendBuffer)
