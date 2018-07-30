@@ -70,11 +70,13 @@ func handleSiphashToHost(req *apnad.SiphashToHostReq) *apnad.SiphashToHostReply 
 // @param: retAddr -> Return address on which response would be send back
 // @param: registerAddr -> EphID generation for this address
 func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGenerationReply {
-	log.Debug("Got EphIDGeneration request", "request", req)
 	var ephID apnad.EphID
 	// 1. Copy the kind inside ephID
 	copy(ephID[apnad.TypeOffset:apnad.HostIDOffset], []byte{req.Kind})
+
 	// 2. Generate hostID and put it inside ephID
+	ephidBenchmark := &apnad.EphIDBenchmark{}
+	start := time.Now()
 	hostID, err := generateHostID(req.Addr.Addr)
 	if err != nil {
 		reply := &apnad.EphIDGenerationReply{
@@ -84,38 +86,55 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 	}
 	mapSiphashToHost[hostID.String()] = req.Addr.Addr
 	copy(ephID[apnad.HostIDOffset:apnad.TimestampOffset], hostID)
+	ephidBenchmark.HostIDGenerationTime = time.Since(start)
+
 	// 3. Get the expiration time and append to ephID
+	start = time.Now()
 	expTime := getExpTime(req.Kind)
 	copy(ephID[apnad.TimestampOffset:], expTime)
+	ephidBenchmark.ExpTimeGenerationTime = time.Since(start)
+
+	start = time.Now()
 	iv, encryptedEphID, err := apnad.EncryptEphID(&ephID)
 	if err != nil {
 		reply := &apnad.EphIDGenerationReply{
 			ErrorCode: apnad.ErrorEncryptEphID,
 		}
-		log.Debug("Reply EphIDGeneration sent", "reply", reply)
 		return reply
 	}
+	response := append(iv, encryptedEphID...)
+	ephidBenchmark.EncryptEphidTime = time.Since(start)
+
+	start = time.Now()
 	mac, err := apnad.ComputeMac(iv, encryptedEphID)
 	if err != nil {
 		reply := &apnad.EphIDGenerationReply{
 			ErrorCode: apnad.ErrorMACCompute,
 		}
-		log.Debug("Reply EphIDGeneration sent", "reply", reply)
 		return reply
 	}
-	response := append(iv, encryptedEphID...)
 	response = append(response, mac...)
+	ephidBenchmark.MacComputeTime = time.Since(start)
+
+	start = time.Now()
 	cert := &apnad.Certificate{
 		Ephid:    response,
 		Pubkey:   req.Pubkey,
 		RecvOnly: req.Kind,
 		ExpTime:  expTime,
 	}
-	cert.Sign()
+	err = cert.Sign()
+	if err != nil {
+		reply := &apnad.EphIDGenerationReply{
+			ErrorCode: apnad.ErrorSignCertificate,
+		}
+		return reply
+	}
 	reply := &apnad.EphIDGenerationReply{
 		ErrorCode: apnad.ErrorEphIDGenOk,
 		Cert:      *cert,
 	}
-	log.Debug("Reply EphIDGeneration sent", "reply", reply)
+	ephidBenchmark.CertificateSignTime = time.Since(start)
+	log.Info(ephidBenchmark.String())
 	return reply
 }

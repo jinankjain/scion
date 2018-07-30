@@ -26,7 +26,7 @@ func ListenAndServe(ip net.IP, port int) error {
 	if err != nil {
 		return err
 	}
-	log.Info("Started APNAD Service", "addr", serverConn.LocalAddr())
+	log.Debug("Started APNAD Service", "addr", serverConn.LocalAddr())
 	NewAPI(transport.NewPacketTransport(serverConn)).Serve()
 	return nil
 }

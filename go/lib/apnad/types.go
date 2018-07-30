@@ -34,6 +34,7 @@ const (
 	ErrorGenerateHostID
 	ErrorEncryptEphID
 	ErrorMACCompute
+	ErrorSignCertificate
 )
 
 func (c EphIDGenerationErrorCode) String() string {
@@ -46,6 +47,8 @@ func (c EphIDGenerationErrorCode) String() string {
 		return "Error while encrypting EphID"
 	case ErrorMACCompute:
 		return "Error while computing MAC"
+	case ErrorSignCertificate:
+		return "Error while signing the certificate"
 	default:
 		return fmt.Sprintf("Unknown error (%v)", uint8(c))
 	}

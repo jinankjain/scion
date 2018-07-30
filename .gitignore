@@ -84,3 +84,5 @@ c/lib/hsr/build
 *.nav
 *.toc
 *.out
+
+apna_benchmark/*

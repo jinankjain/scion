@@ -12,10 +12,11 @@ cmd_run_apna_client() {
 
 cmd_run_ms() {
     echo "Running management service"
-    ./bin/apnad -config go/apnad/testdata/apnad.json
+    ./bin/apnad -config go/apnad/testdata/apnad.json -exp ${EXPNAME}
 }
 
 COMMAND="$1"
+EXPNAME="$2"
 
 case "$COMMAND" in
     server) cmd_run_apna_server ;;
