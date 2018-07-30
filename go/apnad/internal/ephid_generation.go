@@ -2,6 +2,7 @@ package internal
 
 import (
 	"encoding/binary"
+	"fmt"
 	"hash"
 	"net"
 	"time"
@@ -73,6 +74,10 @@ func handleEphIDGeneration(req *apnad.EphIDGenerationReq) *apnad.EphIDGeneration
 	var ephID apnad.EphID
 	// 1. Copy the kind inside ephID
 	copy(ephID[apnad.TypeOffset:apnad.HostIDOffset], []byte{req.Kind})
+
+	t := time.Now()
+	name := fmt.Sprintf("%s-%s", "ephid_benchmark", t.Format("2006-01-02 15:04:05"))
+	log.SetupLogFile(name, logDir, "info", 20, 100, 0)
 
 	// 2. Generate hostID and put it inside ephID
 	ephidBenchmark := &apnad.EphIDBenchmark{}

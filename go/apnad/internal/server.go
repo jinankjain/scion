@@ -10,6 +10,10 @@ import (
 	"github.com/scionproto/scion/go/lib/log"
 )
 
+const (
+	logDir = "apna_benchmark"
+)
+
 func Init() {
 	dnsRegister = make(map[uint8]map[string]apnad.Certificate)
 	mapSiphashToHost = make(map[string]net.IP)
