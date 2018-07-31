@@ -6,12 +6,13 @@ $Go.import("github.com/scionproto/scion/go/proto");
 struct APNAHeader {
     localEphID @0: Data; #Local EphID
     remoteEphID @1: Data; #Remote EphID
-    nextHeader @2: UInt8;
+    packetMAC @2: Data; #Packet MAC
+    nextHeader @3: UInt8;
     union {
-        pubkey @3: Data;
-        ecert @4: Data;
-        data @5: Data;
-        ecertPubkey @6: EcertPubkey;
+        pubkey @4: Data;
+        ecert @5: Data;
+        data @6: Data;
+        ecertPubkey @7: EcertPubkey;
     }
 }
 

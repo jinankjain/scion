@@ -1,0 +1,10 @@
+{
+	"ip": "127.0.0.1",
+	"port": 6000,
+	"signAlgo": "ed25519",
+	"pubkey": "ng5jQj92K6yfpqj9gDZ9p5nxFak0b8Dg1cqewDrOo9E=",
+	"privkey": "ZUvj6fsraVw6grHdHbJOlYWmt1TWR8rrIUg60vlzdqieDmNCP3YrrJ+mqP2ANn2nmfEVqTRvwODVyp7AOs6j0Q==",
+	"hmacKey": "04NxMBTM0TMNzjij+e2sltItng+r5TDC2YZfBro3M5ibwvPu/Ml6nXE2Y9Mxcy5+/Tvh6c1OoHzHRN8cZGzctA==",
+	"aesKey": "NaCSWSy4/G7OdJKdx5+B3w==",
+	"siphashKey": "8mfHfdeuGW20iLDcT5I3ZA=="
+}

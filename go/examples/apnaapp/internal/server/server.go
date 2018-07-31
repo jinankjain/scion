@@ -34,6 +34,7 @@ type Server struct {
 }
 
 var server Server
+var conf *config.Config
 
 func initApnad(conf *config.Config, server *Server, network string) error {
 	var err error
@@ -78,7 +79,8 @@ func initApnad(conf *config.Config, server *Server, network string) error {
 
 func startServer(args []string) {
 	// 1. Load config
-	conf, err := config.LoadConfig()
+	var err error
+	conf, err = config.LoadConfig()
 	if err != nil {
 		panic(err)
 	}

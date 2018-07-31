@@ -1,6 +1,7 @@
 {
     "apnadPubkey": "mM3PVuXwnECecniEa1lbvEQ3iGYe6hR6OEFRUXKZ1Ro=",
     "symmetricKey": "fZfEnDO9xbFE4iYhzWrSAQ==",
+    "hmacKey": "ObeoS0IlBZpIxl5WToCIR45SmDuHz99ubeeQvNfyEEZUqEt8mmLjAJLqglFwNOi/fNp7E1ORDo0ZjLUKAGmBYQ==",
     "ip": "127.0.0.1",
     "port": 6000
 }

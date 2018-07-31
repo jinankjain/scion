@@ -21,6 +21,10 @@ func (c *Client) handshakePartOne() (common.RawBytes, error) {
 		NextHeader:  0x00,
 		Pubkey:      client.CtrlCertificate.Pubkey,
 	}
+	err := msg.Sign(conf.HmacKey)
+	if err != nil {
+		panic(err)
+	}
 	ctrlSharedSecret, err := apnad.GenSharedSecret(c.ServerCertificate.Pubkey,
 		c.CtrlEphIDPrivkey)
 	if err != nil {
@@ -73,6 +77,10 @@ func (c *Client) handshakePartTwo(data *apna.Pld) (common.RawBytes, error) {
 			Ecert:  ecert,
 			Pubkey: serverSessionCert.Pubkey,
 		},
+	}
+	err = reply.Sign(conf.HmacKey)
+	if err != nil {
+		panic(err)
 	}
 	return reply.RawPld()
 }

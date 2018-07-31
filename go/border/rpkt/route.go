@@ -29,6 +29,7 @@ import (
 	"github.com/scionproto/scion/go/lib/apnad"
 	"github.com/scionproto/scion/go/lib/assert"
 	"github.com/scionproto/scion/go/lib/common"
+	"github.com/scionproto/scion/go/lib/l4"
 	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/overlay"
 	"github.com/scionproto/scion/go/lib/ringbuf"
@@ -156,12 +157,18 @@ func (rp *RtrPkt) forwardFromExternal() (HookResult, error) {
 	if onLastSeg && rp.dstIA.Eq(rp.Ctx.Conf.IA) {
 		// Destination is a host in the local ISD-AS.
 		ot := overlay.OverlayFromIP(rp.dstHost.IP(), rp.Ctx.Conf.Topo.Overlay)
-		log.Info("XXXXX", "dstHOP", rp.dstHost.Type())
 		dst := &topology.AddrInfo{
 			Overlay:     ot,
 			OverlayPort: overlay.EndhostPort,
 		}
 		if rp.dstHost.Type() == addr.HostTypeAPNA {
+			found, err := rp.findL4()
+			if err != nil || !found {
+				log.Info("JJJJJJ", "found", found, "err", err)
+				return HookError, err
+			}
+			rp.idxs.pld = rp.idxs.l4 + l4.UDPLen
+			log.Info("XXXXX", "dstHOP", rp.dstHost.Type(), "pld", rp.Raw[rp.idxs.pld:], "l4", rp.idxs.l4)
 			ephid1 := rp.dstHost.Copy().Pack()
 			ephid2 := make([]byte, len(ephid1))
 			copy(ephid2, ephid1)

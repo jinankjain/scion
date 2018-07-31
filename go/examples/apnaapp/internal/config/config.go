@@ -12,6 +12,7 @@ import (
 type Config struct {
 	ApnadPubkey  common.RawBytes `json:"apnadPubkey"`
 	SymmetricKey common.RawBytes `json:"symmetricKey"`
+	HmacKey      common.RawBytes `json:"hmacKey"`
 	IP           net.IP          `json:"ip"`
 	Port         int             `json:"port"`
 }

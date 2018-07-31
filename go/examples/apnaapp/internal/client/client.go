@@ -44,6 +44,7 @@ type Session struct {
 }
 
 var client *Client
+var conf *config.Config
 
 func initApnad(conf *config.Config, client *Client, network string) error {
 	var err error
@@ -92,7 +93,8 @@ func initApnad(conf *config.Config, client *Client, network string) error {
 
 func startClient(args []string) {
 	// 1. Load the config
-	conf, err := config.LoadConfig()
+	var err error
+	conf, err = config.LoadConfig()
 	if err != nil {
 		panic(err)
 	}
