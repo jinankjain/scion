@@ -17,4 +17,5 @@ enum ServiceType {
     ps @2;  # Path service
     cs @3;  # Certificate service
     sb @4;  # SIBRA service
+    ap @5;  # APNA service
 }

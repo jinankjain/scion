@@ -115,6 +115,7 @@ DEFAULT_CERTIFICATE_SERVER = "py"
 DEFAULT_GRACE_PERIOD = 18000
 DEFAULT_CERTIFICATE_SERVERS = 1
 DEFAULT_PATH_SERVERS = 1
+DEFAULT_APNA_SERVERS = 1
 
 DEFAULT_TRC_VALIDITY = 365 * 24 * 60 * 60
 DEFAULT_CORE_CERT_VALIDITY = 364 * 24 * 60 * 60
@@ -136,6 +137,7 @@ SCION_SERVICE_NAMES = (
     "CertificateService",
     "BorderRouters",
     "PathService",
+    "ApnaService",
 )
 
 DEFAULT_KEYGEN_ALG = 'ed25519'
@@ -662,6 +664,7 @@ class TopoGenerator(object):
             ("certificate_servers", DEFAULT_CERTIFICATE_SERVERS, "cs",
              "CertificateService"),
             ("path_servers", DEFAULT_PATH_SERVERS, "ps", "PathService"),
+            ("apna_servers", DEFAULT_APNA_SERVERS, "ap", "ApnaService"),
         ):
             self._gen_srv_entry(
                 topo_id, as_conf, conf_key, def_num, nick, topo_key)
@@ -776,12 +779,14 @@ class PrometheusGenerator(object):
         "BeaconService": "bs.yml",
         "CertificateService": "cs.yml",
         "PathService": "ps.yml",
+        "ApnaService": "ap.yml",
     }
     JOB_NAMES = {
         "BorderRouters": "BR",
         "BeaconService": "BS",
         "CertificateService": "CS",
         "PathService": "PS",
+        "ApnaService": "AP",
     }
 
     def __init__(self, out_dir, topo_dicts):
@@ -794,7 +799,7 @@ class PrometheusGenerator(object):
             ele_dict = defaultdict(list)
             for br_id, br_ele in as_topo["BorderRouters"].items():
                 ele_dict["BorderRouters"].append(_prom_addr_br(br_ele))
-            for svc_type in ["BeaconService", "PathService", "CertificateService"]:
+            for svc_type in ["BeaconService", "PathService", "CertificateService", "ApnaService"]:
                 for elem_id, elem in as_topo[svc_type].items():
                     ele_dict[svc_type].append(_prom_addr_infra(elem))
             config_dict[topo_id] = ele_dict
@@ -860,7 +865,17 @@ class SupervisorGenerator(object):
             entries.extend(self._std_entries(topo, key, cmd, base))
         entries.extend(self._cs_entries(topo, base))
         entries.extend(self._br_entries(topo, "bin/border", base))
+        entries.extend(self._ap_entries(topo, "bin/apna_srv", base))
         self._write_as_conf(topo_id, entries)
+
+    def _ap_entries(self, topo, cmd, base):
+        entries = []
+        for k, v in topo.get("ApnaService", {}).items():
+            conf_dir = os.path.join(base, k)
+            entries.append((k, [cmd, "-id=%s" % k, "-confd=%s" % conf_dir, "-sciond",
+                                get_default_sciond_path(ISD_AS(topo["ISD_AS"])),
+                                "-prom=%s" % _prom_addr_infra(v)]))
+        return entries
 
     def _std_entries(self, topo, topo_key, cmd, base):
         entries = []
@@ -1010,6 +1025,7 @@ class DockerGenerator(object):
             self._cs_conf(topo_id, topo, base)
             self._bs_conf(topo_id, topo, base)
             self._ps_conf(topo_id, topo, base)
+            self._ap_conf(topo_id, topo, base)
             self._sciond_conf(topo_id, base)
         write_file(os.path.join(self.out_dir, DOCKER_CONF),
                    yaml.dump(self.dc_conf, default_flow_style=False))
@@ -1035,6 +1051,39 @@ class DockerGenerator(object):
             entry['volumes'].append('${PWD}/%s:/share/conf:ro' % os.path.join(base, k))
             entry['command'].append('-id=%s' % k)
             entry['command'].append('-prom=%s' % _prom_addr_br(v))
+            self.dc_conf['services'][k] = entry
+
+    def _ap_conf(self, topo_id, topo, base):
+        raw_entry = {
+            'image': 'scion_apna',
+            'restart': 'always',
+            'depends_on': [
+                self._sciond_name(topo_id),
+                'dispatcher',
+                'zookeeper'
+            ],
+            'environment': {
+                'SU_EXEC_USERSPEC': '$LOGNAME',
+            },
+            'volumes': [
+                '/etc/passwd:/etc/passwd:ro',
+                '/etc/group:/etc/group:ro',
+                '/run/shm/dispatcher:/run/shm/dispatcher:rw',
+                '/run/shm/sciond:/run/shm/sciond:rw',
+                '${PWD}/gen-cache:/share/cache:rw',
+                '${PWD}/logs:/share/logs:rw'
+            ],
+            'command': [
+                '--spki_cache_dir=cache'
+            ]
+        }
+        for k, v in topo.get("ApnaService", {}).items():
+            entry = copy.deepcopy(raw_entry)
+            entry['container_name'] = k
+            entry['volumes'].append('${PWD}/%s:/share/conf:ro' % os.path.join(base, k))
+            entry['command'].append('--prom=%s' % _prom_addr_infra(v))
+            entry['command'].append(k)
+            entry['command'].append('conf')
             self.dc_conf['services'][k] = entry
 
     def _cs_conf(self, topo_id, topo, base):

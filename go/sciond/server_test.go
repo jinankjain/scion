@@ -223,8 +223,8 @@ func TestSVCInfo(t *testing.T) {
 			},
 		},
 		{
-			Name:     "ask for CS and PS",
-			SVCTypes: []proto.ServiceType{proto.ServiceType_cs, proto.ServiceType_ps},
+			Name:     "ask for CS, PS and AP",
+			SVCTypes: []proto.ServiceType{proto.ServiceType_cs, proto.ServiceType_ps, proto.ServiceType_ap},
 			Expected: &sciond.ServiceInfoReply{
 				Entries: []sciond.ServiceInfoReplyEntry{
 					{
@@ -239,6 +239,13 @@ func TestSVCInfo(t *testing.T) {
 						Ttl:         300,
 						HostInfos: []sciond.HostInfo{
 							servers.TopoAddrToHostInfo(topo.Overlay, topo.PS[topo.PSNames[0]]),
+						},
+					},
+					{
+						ServiceType: proto.ServiceType_ap,
+						Ttl:         300,
+						HostInfos: []sciond.HostInfo{
+							servers.TopoAddrToHostInfo(topo.Overlay, topo.AP[topo.APNames[0]]),
 						},
 					},
 				},

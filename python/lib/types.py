@@ -61,6 +61,8 @@ class ServiceType(TypeBase):
     CS = "cs"
     #: SIBRA service
     SIBRA = "sb"
+    #: APNA Service
+    APNA = "ap"
 
 
 class ExtensionClass(TypeBase):

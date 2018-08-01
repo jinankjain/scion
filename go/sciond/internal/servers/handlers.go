@@ -218,6 +218,8 @@ func (h *SVCInfoRequestHandler) Handle(transport infra.Transport, src net.Addr, 
 			hostInfos = makeHostInfos(h.Topology.Overlay, h.Topology.CS)
 		case proto.ServiceType_sb:
 			hostInfos = makeHostInfos(h.Topology.Overlay, h.Topology.SB)
+		case proto.ServiceType_ap:
+			hostInfos = makeHostInfos(h.Topology.Overlay, h.Topology.AP)
 		}
 		replyEntry := sciond.ServiceInfoReplyEntry{
 			ServiceType: t,

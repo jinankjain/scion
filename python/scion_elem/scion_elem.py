@@ -1089,6 +1089,7 @@ class SCIONElement(object):
             ServiceType.CS: self.topology.certificate_servers,
             ServiceType.PS: self.topology.path_servers,
             ServiceType.SIBRA: self.topology.sibra_servers,
+            ServiceType.APNA: self.topology.apna_servers
         }
         # Generate fallback from local topology
         results = []

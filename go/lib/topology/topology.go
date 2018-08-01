@@ -51,6 +51,8 @@ type Topo struct {
 	PSNames []string
 	SB      map[string]TopoAddr
 	SBNames []string
+	AP      map[string]TopoAddr
+	APNames []string
 	RS      map[string]TopoAddr
 	RSNames []string
 	DS      map[string]TopoAddr
@@ -67,6 +69,7 @@ func NewTopo() *Topo {
 		CS:        make(map[string]TopoAddr),
 		PS:        make(map[string]TopoAddr),
 		SB:        make(map[string]TopoAddr),
+		AP:        make(map[string]TopoAddr),
 		RS:        make(map[string]TopoAddr),
 		DS:        make(map[string]TopoAddr),
 		ZK:        make(map[int]TopoAddr),
@@ -171,6 +174,10 @@ func (t *Topo) populateServices(raw *RawTopo) error {
 	if err != nil {
 		return err
 	}
+	t.APNames, err = svcMapFromRaw(raw.ApnaService, common.AP, t.AP, t.Overlay)
+	if err != nil {
+		return err
+	}
 	t.RSNames, err = svcMapFromRaw(raw.RainsService, common.RS, t.RS, t.Overlay)
 	if err != nil {
 		return err
@@ -194,6 +201,8 @@ func (t *Topo) GetTopoAddr(nodeType string, id string) *TopoAddr {
 		addressMap = t.CS
 	case common.PS:
 		addressMap = t.PS
+	case common.AP:
+		addressMap = t.AP
 	case common.RS:
 		addressMap = t.RS
 	case common.DS:

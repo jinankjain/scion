@@ -33,6 +33,7 @@ const (
 	PS = "PS"
 	CS = "CS"
 	SB = "SB"
+	AP = "AP"
 	RS = "RS"
 	DS = "DS"
 )

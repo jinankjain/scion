@@ -137,6 +137,7 @@ class Topology(object):
     :ivar list beacon_servers: beacons servers in the AS.
     :ivar list certificate_servers: certificate servers in the AS.
     :ivar list path_servers: path servers in the AS.
+    :ivar list apna_servers: apna servers in the AS
     :ivar list border_routers: border routers in the AS.
     :ivar list parent_interfaces: BR interfaces linking to upstream ASes.
     :ivar list child_interfaces: BR interfaces linking to downstream ASes.
@@ -152,6 +153,7 @@ class Topology(object):
         self.certificate_servers = []
         self.path_servers = []
         self.sibra_servers = []
+        self.apna_servers = []
         self.border_routers = []
         self.parent_interfaces = []
         self.child_interfaces = []
@@ -201,6 +203,7 @@ class Topology(object):
             ("CertificateService", self.certificate_servers),
             ("PathService", self.path_servers),
             ("SibraService", self.sibra_servers),
+            ("ApnaService", self.apna_servers),
         ):
             for k, v in topology.get(type_, {}).items():
                 list_.append(ServerElement(v, k))
@@ -244,6 +247,7 @@ class Topology(object):
             ServiceType.CS: self.certificate_servers,
             ServiceType.PS: self.path_servers,
             ServiceType.SIBRA: self.sibra_servers,
+            ServiceType.APNA: self.apna_servers,
         }
         try:
             target = type_map[server_type]
