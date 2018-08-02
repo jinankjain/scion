@@ -75,3 +75,5 @@ tags
 # HSR
 ##########################
 c/lib/hsr/build
+
+apna_benchmark/*

@@ -52,7 +52,7 @@ class ServiceType(TypeBase):
     CS = "cs"
     BR = "br"
     SIBRA = "sb"
-
+    APNA = "ap"
 
 class ExtensionClass(TypeBase):
     """

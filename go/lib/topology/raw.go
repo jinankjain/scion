@@ -50,6 +50,7 @@ type RawTopo struct {
 	CertificateService map[string]RawAddrInfo `json:",omitempty"`
 	PathService        map[string]RawAddrInfo `json:",omitempty"`
 	SibraService       map[string]RawAddrInfo `json:",omitempty"`
+	ApnaService        map[string]RawAddrInfo `json:",omitempty"`
 	RainsService       map[string]RawAddrInfo `json:",omitempty"`
 	DiscoveryService   map[string]RawAddrInfo `json:",omitempty"`
 }

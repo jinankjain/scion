@@ -88,6 +88,8 @@ DNS_SERVICE = "ds"
 PATH_SERVICE = "ps"
 ROUTER_SERVICE = "br"
 SIBRA_SERVICE = "sb"
+APNA_SERVICE = "ap"
+
 #: All the service types
 SERVICE_TYPES = (
     BEACON_SERVICE,
@@ -96,6 +98,7 @@ SERVICE_TYPES = (
     PATH_SERVICE,
     ROUTER_SERVICE,
     SIBRA_SERVICE,
+    APNA_SERVICE,
 )
 
 #: Dispatcher registration timeout

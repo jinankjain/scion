@@ -39,6 +39,7 @@ from external.ipaddress import ip_address, ip_interface, ip_network
 from OpenSSL import crypto
 
 # SCION
+from lib.app.sciond import get_default_sciond_path
 from lib.config import Config
 from lib.crypto.asymcrypto import (
     generate_enc_keypair,
@@ -118,6 +119,7 @@ DEFAULT_CERTIFICATE_SERVER = "py"
 DEFAULT_GRACE_PERIOD = 18000
 DEFAULT_CERTIFICATE_SERVERS = 1
 DEFAULT_PATH_SERVERS = 1
+DEFAULT_APNA_SERVERS = 1
 
 DEFAULT_TRC_VALIDITY = 365 * 24 * 60 * 60
 DEFAULT_CORE_CERT_VALIDITY = 364 * 24 * 60 * 60
@@ -139,6 +141,7 @@ SCION_SERVICE_NAMES = (
     "CertificateService",
     "BorderRouters",
     "PathService",
+    "ApnaService"
 )
 
 DEFAULT_KEYGEN_ALG = 'ed25519'
@@ -658,6 +661,7 @@ class TopoGenerator(object):
             ("certificate_servers", DEFAULT_CERTIFICATE_SERVERS, "cs",
              "CertificateService"),
             ("path_servers", DEFAULT_PATH_SERVERS, "ps", "PathService"),
+            ("apna_servers", DEFAULT_APNA_SERVERS, "ap", "ApnaService"),
         ):
             self._gen_srv_entry(
                 topo_id, as_conf, conf_key, def_num, nick, topo_key)
@@ -771,12 +775,14 @@ class PrometheusGenerator(object):
         "BeaconService": "bs.yml",
         "CertificateService": "cs.yml",
         "PathService": "ps.yml",
+        "ApnaService": "ap.yml",
     }
     JOB_NAMES = {
         "BorderRouters": "BR",
         "BeaconService": "BS",
         "CertificateService": "CS",
         "PathService": "PS",
+        "ApnaService": "AP",
     }
 
     def __init__(self, out_dir, topo_dicts):
@@ -789,7 +795,7 @@ class PrometheusGenerator(object):
             ele_dict = defaultdict(list)
             for br_id, br_ele in as_topo["BorderRouters"].items():
                 ele_dict["BorderRouters"].append(_prom_addr_br(br_ele))
-            for svc_type in ["BeaconService", "PathService", "CertificateService"]:
+            for svc_type in ["BeaconService", "PathService", "CertificateService", "ApnaService"]:
                 for elem_id, elem in as_topo[svc_type].items():
                     ele_dict[svc_type].append(_prom_addr_infra(elem))
             config_dict[topo_id] = ele_dict
@@ -855,7 +861,17 @@ class SupervisorGenerator(object):
             entries.extend(self._std_entries(topo, key, cmd, base))
         entries.extend(self._cs_entries(topo, base))
         entries.extend(self._br_entries(topo, "bin/border", base))
+        entries.extend(self._ap_entries(topo, "bin/apna_srv", base))
         self._write_as_conf(topo_id, entries)
+
+    def _ap_entries(self, topo, cmd, base):
+        entries = []
+        for k, v in topo.get("ApnaService", {}).items():
+            conf_dir = os.path.join(base, k)
+            entries.append((k, [cmd, "-id=%s" % k, "-confd=%s" % conf_dir, "-sciond",
+                                get_default_sciond_path(ISD_AS(topo["ISD_AS"])),
+                                "-prom=%s" % _prom_addr_infra(v)]))
+        return entries
 
     def _std_entries(self, topo, topo_key, cmd, base):
         entries = []

@@ -44,6 +44,7 @@ from lib.defines import (
     SCIOND_API_SOCKDIR,
     SERVICE_TYPES,
     SIBRA_SERVICE,
+    APNA_SERVICE,
     STARTUP_QUIET_PERIOD,
     TCP_ACCEPT_POLLING_TOUT,
     TOPO_FILE,
@@ -1169,6 +1170,7 @@ class SCIONElement(object):
             CERTIFICATE_SERVICE: self.topology.certificate_servers,
             PATH_SERVICE: self.topology.path_servers,
             SIBRA_SERVICE: self.topology.sibra_servers,
+            APNA_SERVICE: self.topology.apna_servers,
         }
         # Generate fallback from local topology
         results = []

@@ -21,6 +21,7 @@ from lib.defines import (
     CERTIFICATE_SERVICE,
     PATH_SERVICE,
     SIBRA_SERVICE,
+    APNA_SERVICE,
 )
 from lib.packet.host_addr import HostAddrSVC
 
@@ -43,6 +44,8 @@ class SVCType(object):
     CS_A = HostAddrSVC(2, raw=False)
     # SIBRA service
     SB_A = HostAddrSVC(3, raw=False)
+    # APNA service
+    AP_A = HostAddrSVC(4, raw=False)
     # No service, used e.g., in TCP socket.
     NONE = HostAddrSVC(0xffff, raw=False)
 
@@ -52,6 +55,7 @@ SVC_TO_SERVICE = {
     SVCType.PS_A.addr: PATH_SERVICE,
     SVCType.CS_A.addr: CERTIFICATE_SERVICE,
     SVCType.SB_A.addr: SIBRA_SERVICE,
+    SVCType.AP_A.addr: APNA_SERVICE,
 }
 
 SERVICE_TO_SVC_A = {
@@ -59,4 +63,5 @@ SERVICE_TO_SVC_A = {
     CERTIFICATE_SERVICE: SVCType.CS_A,
     PATH_SERVICE: SVCType.PS_A,
     SIBRA_SERVICE: SVCType.SB_A,
+    APNA_SERVICE: SVCType.AP_A,
 }

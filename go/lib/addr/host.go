@@ -64,6 +64,7 @@ var (
 	SvcPS   = HostSVC(0x0001)
 	SvcCS   = HostSVC(0x0002)
 	SvcSB   = HostSVC(0x0003)
+	SvcAP   = HostSVC(0x0004)
 	SvcNone = HostSVC(0xffff)
 )
 
@@ -194,6 +195,8 @@ func HostSVCFromString(str string) HostSVC {
 		return SvcCS | m
 	case "SB":
 		return SvcSB | m
+	case "AP":
+		return SvcAP | m
 	default:
 		return SvcNone
 	}
@@ -244,6 +247,8 @@ func (h HostSVC) String() string {
 		name = "CS"
 	case SvcSB:
 		name = "SB"
+	case SvcSB:
+		name = "AP"
 	default:
 		name = "UNKNOWN"
 	}
