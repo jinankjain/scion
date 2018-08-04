@@ -437,4 +437,4 @@ def get_default_sciond_path(ia=None):
         sock_path = SCIOND_API_DEFAULT_SOCK
     else:
         sock_path = "sd%s.sock" % (ia.file_fmt())
-    return "%s/%s" % (SCIOND_API_SOCKDIR, sock_path)
+    return "%s%s" % (SCIOND_API_SOCKDIR, sock_path)

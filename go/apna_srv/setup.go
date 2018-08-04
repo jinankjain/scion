@@ -41,8 +41,7 @@ func setup() error {
 		}
 	} else {
 		raddrIA, _ := addr.IAFromString("2-ff00:0:222")
-		raddr := &snet.Addr{IA: raddrIA, Host: addr.HostFromIP([]byte{127, 0, 1, 1}),
-			L4Port: uint16(30057)}
+		raddr := &snet.Addr{IA: raddrIA, Host: addr.SvcAP}
 		conn, err := snet.DialSCIONWithBindSVC("udp4", config.PublicAddr, raddr, config.BindAddr,
 			addr.SvcAP)
 		if err != nil {

@@ -166,10 +166,9 @@ func (t *Topo) populateServices(raw *RawTopo) error {
 	if t.SBNames, err = svcMapFromRaw(raw.SibraService, "SB", t.SB, t.Overlay); err != nil {
 		return err
 	}
-	t.APNames, err = svcMapFromRaw(raw.ApnaService, "AP", t.AP, t.Overlay)
-	if err != nil {
+	if t.APNames, err = svcMapFromRaw(raw.ApnaService, "AP", t.AP, t.Overlay); err != nil {
 		return err
-	}
+	}	
 	if t.RSNames, err = svcMapFromRaw(raw.RainsService, "RS", t.RS, t.Overlay); err != nil {
 		return err
 	}
