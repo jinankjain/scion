@@ -15,7 +15,6 @@ var (
 		"SCION Dispatcher path")
 	confDir = flag.String("confd", "", "Configuration directory (Required)")
 	prom    = flag.String("prom", "127.0.0.1:1282", "Address to export prometheus metrics on")
-	server  = flag.Bool("server", false, "Run in server mode")
 )
 
 func main() {
@@ -30,7 +29,6 @@ func main() {
 	if err = checkFlags(); err != nil {
 		fatal(err.Error())
 	}
-	log.Info("Started")
 	if err = setup(); err != nil {
 		fatal(err.Error())
 	}
