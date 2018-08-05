@@ -30,6 +30,8 @@ const (
 	MacOffset  = 12
 	TypeOffset = 0
 	TypeLen    = 1
+	EHIDOffset = 4
+	EHIDLen    = 8
 )
 
 func (h HID) Type() byte {
@@ -44,7 +46,27 @@ func (h HID) ExpTime() uint32 {
 	return binary.LittleEndian.Uint32(h[TimeOffset : TimeOffset+TimeLen])
 }
 
+func GetHID(kind byte, host common.RawBytes, expTime common.RawBytes) HID {
+	hid := make([]byte, 8)
+	hid[TypeOffset] = kind
+	copy(hid[HostOffset:HostOffset+HostLen], host)
+	copy(hid[TimeOffset:TimeOffset+TimeLen], expTime)
+	return hid
+}
+
 type EphID common.RawBytes
+
+func (e EphID) IV() common.RawBytes {
+	return common.RawBytes(e[:IvLen])
+}
+
+func (e EphID) MAC() common.RawBytes {
+	return common.RawBytes(e[MacOffset : MacOffset+MacLen])
+}
+
+func (e EphID) EHID() common.RawBytes {
+	return common.RawBytes(e[EHIDOffset : EHIDOffset+EHIDLen])
+}
 
 const (
 	ErrMacVerificationFailed = "MAC verification failed"

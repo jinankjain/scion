@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
+	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/hpkt"
 	"github.com/scionproto/scion/go/lib/l4"
@@ -254,6 +255,29 @@ func (c *Conn) Write(b []byte) (int, error) {
 		return 0, common.NewBasicError("Unable to Write, remote address not set", nil)
 	}
 	return c.WriteToSCION(b, c.raddr)
+}
+
+func (c *Conn) WriteApna(b *apna.Pkt) (int, error) {
+	if c.raddr == nil {
+		return 0, common.NewBasicError("Unable to Write, remote address not set", nil)
+	}
+	svcPkt := &apna.SVCPkt{
+		RemoteIA: c.raddr.IA.IAInt(),
+		ApnaPkt:  *b,
+	}
+	rsvcPkt, err := svcPkt.RawPkt()
+	if err != nil {
+		return 0, common.NewBasicError("Unable serialize apna pkt", nil)
+	}
+	svcAddr, err := c.scionNet.apnaSVCResolver.Query()
+	if err != nil {
+		return 0, err
+	}
+	conn, err := net.DialUDP("udp", nil, svcAddr)
+	if err != nil {
+		return 0, nil
+	}
+	return conn.Write(rsvcPkt)
 }
 
 func (c *Conn) write(b []byte, raddr *Addr) (int, error) {

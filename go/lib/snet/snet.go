@@ -50,6 +50,7 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
+	"github.com/scionproto/scion/go/lib/apnamgr"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/pathmgr"
@@ -91,11 +92,12 @@ func IA() addr.IA {
 // SCION networking context, containing local ISD-AS, SCIOND, Dispatcher and
 // Path resolver.
 type Network struct {
-	sciond         sciond.Service
-	sciondPath     string
-	dispatcherPath string
-	pathResolver   *pathmgr.PR
-	localIA        addr.IA
+	sciond          sciond.Service
+	sciondPath      string
+	dispatcherPath  string
+	pathResolver    *pathmgr.PR
+	localIA         addr.IA
+	apnaSVCResolver *apnamgr.AP
 }
 
 // NewNetworkBasic creates a minimal networking context without a path resolver.
@@ -124,6 +126,11 @@ func NewNetwork(ia addr.IA, sPath string, dPath string) (*Network, error) {
 		return nil, common.NewBasicError("Unable to initialize path resolver", err)
 	}
 	network.pathResolver = pathResolver
+	apnaSVCResolver, err := apnamgr.New(network.sciond, log.Root())
+	if err != nil {
+		return nil, common.NewBasicError("Unable to initialize apna svc resolver", err)
+	}
+	network.apnaSVCResolver = apnaSVCResolver
 	return network, nil
 }
 

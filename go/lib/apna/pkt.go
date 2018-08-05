@@ -6,9 +6,25 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/proto"
 )
+
+var _ proto.Cerealizable = (*SVCPkt)(nil)
+
+type SVCPkt struct {
+	RemoteIA addr.IAInt
+	ApnaPkt  Pkt
+}
+
+func (s *SVCPkt) ProtoId() proto.ProtoIdType {
+	return proto.APNASVCPkt_TypeID
+}
+
+func (s *SVCPkt) String() string {
+	return fmt.Sprintf("Remote IA: %s ApnaPkt %s", s.RemoteIA.IA(), &(s.ApnaPkt))
+}
 
 var _ proto.Cerealizable = (*Pkt)(nil)
 
@@ -68,8 +84,17 @@ func (p *Pkt) RawPkt() (common.RawBytes, error) {
 	return proto.PackRoot(p)
 }
 
+func (s *SVCPkt) RawPkt() (common.RawBytes, error) {
+	return proto.PackRoot(s)
+}
+
 func NewPktFromRaw(b common.RawBytes) (*Pkt, error) {
 	p := &Pkt{}
+	return p, proto.ParseFromRaw(p, p.ProtoId(), b)
+}
+
+func NewSVCPktFromRaw(b common.RawBytes) (*SVCPkt, error) {
+	p := &SVCPkt{}
 	return p, proto.ParseFromRaw(p, p.ProtoId(), b)
 }
 

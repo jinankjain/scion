@@ -22,3 +22,8 @@ struct EcertPubkey {
     ecert @0: Data;
     pubkey @1: Data;
 }
+
+struct APNASVCPkt {
+    remoteIA @0: UInt64; #Remote ISDAS
+    apnaPkt @1: APNAPkt; #ApnaPkt
+}

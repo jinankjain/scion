@@ -5,7 +5,6 @@ import (
 	"net"
 	"time"
 
-	"github.com/scionproto/scion/go/apna_srv/conf"
 	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/log"
@@ -21,20 +20,15 @@ const (
 	MaxBufSize    = 2 << 16
 )
 
-func setup() error {
-	config, err := conf.Load(*id, *confDir)
-	if err != nil {
-		return common.NewBasicError(ErrorConf, err)
-	}
-	if err := initSNET(config.PublicAddr.IA, initAttempts, initInterval); err != nil {
+func (a *ApnaSrv) setup() error {
+	a.MacQueue = make(chan svcPkt, 16)
+	a.SvcForwardQueue = make(chan svcPkt, 16)
+	a.SvcRecieveQueue = make(chan common.RawBytes, 16)
+	a.EndHostForwardQueue = make(chan pkt, 16)
+	a.FailureQueue = make(chan pkt, 16)
+	a.EndHostRecieveQueue = make(chan pkt, 16)
+	if err := initSNET(a.Config.PublicAddr.IA, initAttempts, initInterval); err != nil {
 		return common.NewBasicError(ErrorSNET, err)
-	}
-	done := make(chan error)
-	go startServer(config.PublicAddr, done)
-	go startSVC(config.PublicAddr, config.BindAddr, done)
-	err = <-done
-	if err != nil {
-		return err
 	}
 	return nil
 }
@@ -50,13 +44,14 @@ func initSNET(ia addr.IA, attempts int, sleep time.Duration) (err error) {
 	return err
 }
 
-func startSVC(pubAddr, bindAddr *snet.Addr, done chan error) {
+func (a *ApnaSrv) StartSVC(pubAddr, bindAddr *snet.Addr, done chan error) {
 	conn, err := snet.ListenSCIONWithBindSVC("udp4", pubAddr, bindAddr,
 		addr.SvcAP)
 	if err != nil {
 		log.Error(err.Error())
 		done <- err
 	}
+	a.SVCConn = conn
 	log.Info("Started APNA service on", "addr", pubAddr.String())
 	buf := make([]byte, MaxBufSize)
 	for {
@@ -69,7 +64,7 @@ func startSVC(pubAddr, bindAddr *snet.Addr, done chan error) {
 	}
 }
 
-func startServer(addr *snet.Addr, done chan error) {
+func (a *ApnaSrv) StartServer(addr *snet.Addr, done chan error) {
 	laddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("%s:%v", addr.Host.IP(), addr.L4Port))
 	if err != nil {
 		log.Error(err.Error())
@@ -80,6 +75,7 @@ func startServer(addr *snet.Addr, done chan error) {
 		log.Error(err.Error())
 		done <- err
 	}
+	a.UDPConn = conn
 	log.Info("Started UDP server on", "addr", laddr.String())
 	buf := make([]byte, MaxBufSize)
 	for {
@@ -88,6 +84,9 @@ func startServer(addr *snet.Addr, done chan error) {
 			log.Error("Unable to read network packet", "err", err)
 			continue
 		}
+		tmp := make([]byte, len)
+		copy(tmp, buf[:len])
+		a.SvcRecieveQueue <- tmp
 		log.Info("Message info", "size", len, "addr", raddr, "info", string(buf[:len]))
 	}
 }

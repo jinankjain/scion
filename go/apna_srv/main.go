@@ -29,7 +29,12 @@ func main() {
 	if err = checkFlags(); err != nil {
 		fatal(err.Error())
 	}
-	if err = setup(); err != nil {
+	apnaSrv, err := NewApnaSrv(*id, *confDir)
+	if err != nil {
+		fatal(err.Error())
+	}
+	err = apnaSrv.Run()
+	if err != nil {
 		fatal(err.Error())
 	}
 }
