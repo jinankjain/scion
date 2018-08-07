@@ -42,6 +42,10 @@ func (s Server) handshakePartOne(data *apna.Pkt, raddr *snet.Addr) {
 		NextHeader:  0x01,
 		Ecert:       ecert,
 	}
+	err = reply.Sign(server.Config.HMACKey)
+	if err != nil {
+		panic(err)
+	}
 	rawBytes, err := reply.RawPkt()
 	if err != nil {
 		panic(err)
@@ -81,6 +85,10 @@ func (s Server) handshakePartTwo(data *apna.Pkt, raddr *snet.Addr) {
 		RemoteEphID: localSession.RemoteEphID,
 		NextHeader:  0x03,
 		Data:        edata,
+	}
+	err = reply.Sign(server.Config.HMACKey)
+	if err != nil {
+		panic(err)
 	}
 	rawBytes, err := reply.RawPkt()
 	if err != nil {

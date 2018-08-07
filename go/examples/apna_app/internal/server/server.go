@@ -27,6 +27,7 @@ var Cmd = &cobra.Command{
 
 type Server struct {
 	conn             *snet.Conn
+	Config           *config.Config
 	ApnaMS           apnams.Connector
 	CtrlCertificate  apnams.Certificate
 	CtrlEphIDPrivkey common.RawBytes
@@ -83,6 +84,7 @@ func startServer(args []string) {
 	if err != nil {
 		panic(err)
 	}
+	server.Config = conf
 	log.Info("Server configuration", "conf", conf)
 	// 2. Initialize apnams deamon
 	network := "udp4"

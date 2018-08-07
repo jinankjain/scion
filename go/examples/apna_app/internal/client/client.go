@@ -27,6 +27,7 @@ var Cmd = &cobra.Command{
 
 type Client struct {
 	ApnaMS            apnams.Connector
+	Config            *config.Config
 	CtrlCertificate   apnams.Certificate
 	CtrlEphIDPrivkey  common.RawBytes
 	ServerSrvAddr     *apnams.ServiceAddr
@@ -100,6 +101,7 @@ func startClient(args []string) {
 	// 2. Initialize APNAD deamon
 	network := "udp4"
 	client = &Client{}
+	client.Config = conf
 	err = initApnaMS(conf, client, network)
 	if err != nil {
 		panic(err)
