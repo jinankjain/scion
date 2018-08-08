@@ -84,15 +84,15 @@ func VerifyAndDecryptEphid(e EphID, AESKey common.RawBytes, HMACKey common.RawBy
 	if err != nil {
 		return nil, err
 	}
-	iv := make([]byte, aes.BlockSize)
-	copy(iv[:IvLen], e[:IvLen])
 	plaintext := make([]byte, aes.BlockSize)
 	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
+	iv := ciphertext[:aes.BlockSize]
+	copy(iv[:IvLen], e.IV())
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
 	hid := make([]byte, HIDLen)
-	for i := 0; i < HIDLen; i++ {
-		hid[i] = ciphertext[aes.BlockSize+i] ^ e[i+IvLen]
+	for i, v := range e.EHID() {
+		hid[i] = ciphertext[aes.BlockSize+i] ^ v
 	}
 	return hid, nil
 }
@@ -129,7 +129,7 @@ func EncryptAndSignHostID(h HID, AESKey common.RawBytes, HMACKey common.RawBytes
 	if _, err := io.ReadFull(rand.Reader, iv[:IvLen]); err != nil {
 		return nil, err
 	}
-	mode := cipher.NewCBCDecrypter(block, iv)
+	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
 	ephID := make([]byte, IvLen+HIDLen+MacLen)
 	copy(ephID[:IvLen], iv[:IvLen])

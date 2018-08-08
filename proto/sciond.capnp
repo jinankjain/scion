@@ -109,6 +109,7 @@ struct ServiceInfoRequest {
         cs @2;  # Certificate service
         br @3;  # Router service
         sb @4;  # SIBRA service
+        ap @5;  # APNA service
     }
 }
 

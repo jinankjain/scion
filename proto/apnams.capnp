@@ -14,6 +14,10 @@ struct APNAMSMsg {
         dNSRegisterReply @6: DNSRegisterReply;
         siphashToHostReq @7: SiphashToHostReq;
         siphashToHostReply @8: SiphashToHostReply;
+        macKeyRegister @9: MacKeyRegister;
+        macKeyRegisterReply @10: MacKeyRegisterReply;
+        macKeyReq @11: MacKeyReq;
+        macKeyReply @12: MacKeyReply;
     }
 }
 
@@ -30,6 +34,16 @@ struct DNSReq {
 struct DNSReply {
     errorCode @0: UInt8;
     certificate @1: Certificate;
+}
+
+struct MacKeyReq {
+    addr @0: Data;
+    port @1: UInt16;
+}
+
+struct MacKeyReply {
+    errorCode @0: UInt8;
+    macKey @1: Data;
 }
 
 struct Certificate {
@@ -51,6 +65,16 @@ struct DNSRegister {
 }
 
 struct DNSRegisterReply {
+    errorCode @0: UInt8;
+}
+
+struct MacKeyRegister {
+    addr @0: Data;
+    port @1: UInt16;
+    key @2: Data;
+}
+
+struct MacKeyRegisterReply {
     errorCode @0: UInt8;
 }
 

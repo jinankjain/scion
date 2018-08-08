@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/scionproto/scion/go/examples/apna_app/internal/config"
 	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/apnams"
 	"github.com/scionproto/scion/go/lib/log"
@@ -39,6 +40,8 @@ func (s Server) handshakePartOne(data *apna.Pkt, raddr *snet.Addr) {
 		Which:       proto.APNAPkt_Which_ecert,
 		LocalEphID:  data.RemoteEphID,
 		RemoteEphID: data.LocalEphID,
+		RemotePort:  data.LocalPort,
+		LocalPort:   config.LocalAddr.L4Port,
 		NextHeader:  0x01,
 		Ecert:       ecert,
 	}
@@ -46,11 +49,7 @@ func (s Server) handshakePartOne(data *apna.Pkt, raddr *snet.Addr) {
 	if err != nil {
 		panic(err)
 	}
-	rawBytes, err := reply.RawPkt()
-	if err != nil {
-		panic(err)
-	}
-	_, err = s.conn.WriteTo(rawBytes, raddr)
+	_, err = s.conn.WriteApnaTo(reply, raddr)
 	if err != nil {
 		panic(err)
 	}
@@ -83,6 +82,8 @@ func (s Server) handshakePartTwo(data *apna.Pkt, raddr *snet.Addr) {
 		Which:       proto.APNAPkt_Which_data,
 		LocalEphID:  localSession.LocalEphID,
 		RemoteEphID: localSession.RemoteEphID,
+		LocalPort:   config.LocalAddr.L4Port,
+		RemotePort:  data.LocalPort,
 		NextHeader:  0x03,
 		Data:        edata,
 	}
@@ -90,27 +91,18 @@ func (s Server) handshakePartTwo(data *apna.Pkt, raddr *snet.Addr) {
 	if err != nil {
 		panic(err)
 	}
-	rawBytes, err := reply.RawPkt()
-	if err != nil {
-		panic(err)
-	}
-	_, err = s.conn.WriteTo(rawBytes, raddr)
+	_, err = s.conn.WriteApnaTo(reply, raddr)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (s Server) handleConnection() {
-	buf := make([]byte, 1024)
-	n, raddr, err := s.conn.ReadFromSCION(buf)
-	log.Info("Details", "raddr", raddr, "len", n)
+	data, raddr, err := s.conn.ReadApna()
 	if err != nil {
 		panic(err)
 	}
-	data, err := apna.NewPktFromRaw(buf)
-	if err != nil {
-		panic(err)
-	}
+	log.Info("Details", "raddr", raddr)
 	switch data.NextHeader {
 	case 0x00:
 		s.handshakePartOne(data, raddr)

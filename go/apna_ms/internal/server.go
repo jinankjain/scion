@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/scionproto/scion/go/lib/apnams"
+	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/infra/transport"
 	"github.com/scionproto/scion/go/lib/log"
 )
@@ -13,6 +14,7 @@ import (
 func Init() {
 	dnsRegister = make(map[uint8]map[string]apnams.Certificate)
 	mapSiphashToHost = make(map[string]net.IP)
+	macKeyRegister = make(map[string]common.RawBytes)
 	siphashKey1 = binary.LittleEndian.Uint64(apnams.ApnaMSConfig.SipHashKey[:8])
 	siphashKey2 = binary.LittleEndian.Uint64(apnams.ApnaMSConfig.SipHashKey[8:])
 }

@@ -40,6 +40,12 @@ func NewAPI(transport infra.Transport) *API {
 			proto.APNAMSMsg_Which_siphashToHostReq: &SiphashToHostHandler{
 				Transport: transport,
 			},
+			proto.APNAMSMsg_Which_macKeyReq: &MacKeyRequestHandler{
+				Transport: transport,
+			},
+			proto.APNAMSMsg_Which_macKeyRegister: &MacKeyRegisterHandler{
+				Transport: transport,
+			},
 		},
 	}
 }

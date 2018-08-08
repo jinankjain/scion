@@ -85,3 +85,41 @@ func (h *DNSRegisterHandler) Handle(pld *apnams.Pld, src net.Addr) {
 	}
 	h.Transport.SendMsgTo(context.Background(), b, src)
 }
+
+type MacKeyRegisterHandler struct {
+	Transport infra.Transport
+}
+
+func (h *MacKeyRegisterHandler) Handle(pld *apnams.Pld, src net.Addr) {
+	req := pld.MacKeyRegister
+	macKeyRegisterReply := handleMacKeyRegister(&req)
+	reply := &apnams.Pld{
+		Id:                  pld.Id,
+		Which:               proto.APNAMSMsg_Which_macKeyRegisterReply,
+		MacKeyRegisterReply: *macKeyRegisterReply,
+	}
+	b, err := proto.PackRoot(reply)
+	if err != nil {
+		log.Error("unable to serialize APNAMSMsg reply")
+	}
+	h.Transport.SendMsgTo(context.Background(), b, src)
+}
+
+type MacKeyRequestHandler struct {
+	Transport infra.Transport
+}
+
+func (h *MacKeyRequestHandler) Handle(pld *apnams.Pld, src net.Addr) {
+	req := pld.MacKeyReq
+	macKeyReply := handleMacKeyRequest(&req)
+	reply := &apnams.Pld{
+		Id:          pld.Id,
+		Which:       proto.APNAMSMsg_Which_macKeyReply,
+		MacKeyReply: *macKeyReply,
+	}
+	b, err := proto.PackRoot(reply)
+	if err != nil {
+		log.Error("unable to serialize APNAMSMsg reply")
+	}
+	h.Transport.SendMsgTo(context.Background(), b, src)
+}

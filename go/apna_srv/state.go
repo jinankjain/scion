@@ -5,6 +5,7 @@ import (
 
 	"github.com/scionproto/scion/go/apna_srv/conf"
 	"github.com/scionproto/scion/go/lib/apna"
+	"github.com/scionproto/scion/go/lib/apnams"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/snet"
 )
@@ -19,17 +20,20 @@ type ApnaSrv struct {
 	// SvcRecieve Queue
 	SvcRecieveQueue chan common.RawBytes
 	// EndHostForward Queue
-	EndHostForwardQueue chan pkt
+	EndHostForwardQueue chan svcPkt
 	// Failure Queue
 	FailureQueue chan pkt
 	// Endhost ReceiveQueue
 	EndHostRecieveQueue chan pkt
 	// HostToMacKey
-	HostToMacKey map[string]common.RawBytes
+	HostToMacKey     map[string]common.RawBytes
+	mapSiphashToHost map[string]net.IP
 	// UdpConn for service
 	UDPConn *net.UDPConn
 	// SVCConn for service
 	SVCConn *snet.Conn
+	// ApnaMSConn connection
+	ApnaMSConn apnams.Connector
 }
 
 func NewApnaSrv(id string, confDir string) (*ApnaSrv, error) {
@@ -48,7 +52,10 @@ func (a *ApnaSrv) Run() error {
 	done := make(chan error)
 	go a.StartServer(a.Config.PublicAddr, done)
 	go a.StartSVC(a.Config.PublicAddr, a.Config.BindAddr, done)
+	go a.MacVerification()
+	go a.SvcForward()
 	go a.SvcReceivePkt(done)
+	go a.EndHostForward()
 	err := <-done
 	if err != nil {
 		return err

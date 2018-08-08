@@ -9,6 +9,24 @@ import (
 	"github.com/scionproto/scion/go/proto"
 )
 
+type MacKeyErrorCode uint8
+
+const (
+	ErrorMacKeyOk MacKeyErrorCode = iota
+	ErrorMacKeyNotFound
+)
+
+func (c MacKeyErrorCode) String() string {
+	switch c {
+	case ErrorMacKeyOk:
+		return "OK"
+	case ErrorMacKeyNotFound:
+		return "No mackey found"
+	default:
+		return fmt.Sprintf("Unknown error (%v)", uint8(c))
+	}
+}
+
 type DNSErrorCode uint8
 
 const (
@@ -66,6 +84,24 @@ func (c SiphashToHostErrorCode) String() string {
 	}
 }
 
+type MacKeyRegisterErrorCode uint8
+
+const (
+	ErrorMacKeyRegisterOk MacKeyRegisterErrorCode = iota
+	ErrorMacKeyRegister
+)
+
+func (c MacKeyRegisterErrorCode) String() string {
+	switch c {
+	case ErrorMacKeyRegisterOk:
+		return "OK"
+	case ErrorMacKeyRegister:
+		return "Error while registering mac key"
+	default:
+		return fmt.Sprintf("Unknown error (%v)", uint8(c))
+	}
+}
+
 type DNSRegisterErrorCode uint8
 
 const (
@@ -97,6 +133,10 @@ type Pld struct {
 	DNSRegisterReply     DNSRegisterReply
 	SiphashToHostReq     SiphashToHostReq
 	SiphashToHostReply   SiphashToHostReply
+	MacKeyRegister       MacKeyRegister
+	MacKeyRegisterReply  MacKeyRegisterReply
+	MacKeyReq            MacKeyReq
+	MacKeyReply          MacKeyReply
 }
 
 func NewPldFromRaw(b common.RawBytes) (*Pld, error) {
@@ -145,6 +185,26 @@ type DNSRegisterReply struct {
 type ServiceAddr struct {
 	Addr     net.IP
 	Protocol uint8
+}
+
+type MacKeyReq struct {
+	Addr common.RawBytes
+	Port uint16
+}
+
+type MacKeyReply struct {
+	ErrorCode MacKeyErrorCode
+	MacKey    common.RawBytes
+}
+
+type MacKeyRegister struct {
+	Addr net.IP
+	Port uint16
+	Key  common.RawBytes
+}
+
+type MacKeyRegisterReply struct {
+	ErrorCode MacKeyRegisterErrorCode
 }
 
 func (p *Pld) ProtoId() proto.ProtoIdType {

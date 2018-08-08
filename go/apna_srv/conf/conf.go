@@ -1,16 +1,21 @@
 package conf
 
 import (
+	"path/filepath"
+
 	"github.com/scionproto/scion/go/lib/addr"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/snet"
 	"github.com/scionproto/scion/go/lib/topology"
-	"path/filepath"
 )
 
 const (
 	ErrorAddr = "Unable to load addresses"
 	ErrorTopo = "Unable to load topology"
+)
+
+const (
+	msConfPath = "go/apna_srv/testdata/apna_srv.json"
 )
 
 type Conf struct {
@@ -25,10 +30,13 @@ type Conf struct {
 	BindAddr *snet.Addr
 	// PublicAddr is the public address
 	PublicAddr *snet.Addr
+	// MSConf apna ms configuration
+	MSConf *MSConf
 }
 
 // Load initalizes the configuration by loading it from confDir
 func Load(id string, confDir string) (*Conf, error) {
+	var err error
 	c := &Conf{
 		ID:      id,
 		ConfDir: confDir,
@@ -36,8 +44,13 @@ func Load(id string, confDir string) (*Conf, error) {
 	if err := c.loadTopo(); err != nil {
 		return nil, err
 	}
+	c.MSConf, err = loadMSConfig(msConfPath)
+	if err != nil {
+		return nil, err
+	}
 	return c, nil
 }
+
 func (c *Conf) loadTopo() error {
 	var err error
 	path := filepath.Join(c.ConfDir, topology.CfgName)

@@ -53,7 +53,8 @@ func (a *AP) Query() (*net.UDPAddr, error) {
 	if !found {
 		return nil, common.NewBasicError("Found no SVC listening", nil)
 	}
-	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%v", hostInfo.Host().IP(), hostInfo.Port))
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%v", hostInfo.Host().IP(),
+		hostInfo.Port))
 	if err != nil {
 		return nil, err
 	}

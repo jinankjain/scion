@@ -63,6 +63,9 @@ var _ net.Conn = (*Conn)(nil)
 var _ net.PacketConn = (*Conn)(nil)
 
 type Conn struct {
+	// udp Conn
+	udpConn *net.UDPConn
+	// dispatcher Conn
 	conn *reliable.Conn
 	// Local, remote and bind SCION addresses (IA, L3, L4)
 	laddr *Addr
@@ -257,12 +260,14 @@ func (c *Conn) Write(b []byte) (int, error) {
 	return c.WriteToSCION(b, c.raddr)
 }
 
-func (c *Conn) WriteApna(b *apna.Pkt) (int, error) {
-	if c.raddr == nil {
+func (c *Conn) WriteApnaTo(b *apna.Pkt, raddr *Addr) (int, error) {
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+	if raddr == nil {
 		return 0, common.NewBasicError("Unable to Write, remote address not set", nil)
 	}
 	svcPkt := &apna.SVCPkt{
-		RemoteIA: c.raddr.IA.IAInt(),
+		RemoteIA: raddr.IA.IAInt(),
 		ApnaPkt:  *b,
 	}
 	rsvcPkt, err := svcPkt.RawPkt()
@@ -273,11 +278,23 @@ func (c *Conn) WriteApna(b *apna.Pkt) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	conn, err := net.DialUDP("udp", nil, svcAddr)
+	return c.udpConn.WriteTo(rsvcPkt, svcAddr)
+}
+
+func (c *Conn) ReadApna() (*apna.Pkt, *Addr, error) {
+	c.readMutex.Lock()
+	defer c.readMutex.Unlock()
+	b := make([]byte, 1024)
+	_, err := c.udpConn.Read(b)
 	if err != nil {
-		return 0, nil
+		return nil, nil, err
 	}
-	return conn.Write(rsvcPkt)
+	sPkt, err := apna.NewSVCPktFromRaw(b)
+	if err != nil {
+		return nil, nil, err
+	}
+	addr := &Addr{IA: sPkt.RemoteIA.IA()}
+	return &sPkt.ApnaPkt, addr, nil
 }
 
 func (c *Conn) write(b []byte, raddr *Addr) (int, error) {

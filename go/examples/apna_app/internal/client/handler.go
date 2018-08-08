@@ -12,7 +12,7 @@ const (
 	ErrUnexpectedPacket = "Unexpected Packet sequence"
 )
 
-func (c *Client) handshakePartOne() (common.RawBytes, error) {
+func (c *Client) handshakePartOne() (*apna.Pkt, error) {
 	log.Info("Start APNA handshake with server by sending its pubkey")
 	msg := &apna.Pkt{
 		Which:       proto.APNAPkt_Which_pubkey,
@@ -33,10 +33,10 @@ func (c *Client) handshakePartOne() (common.RawBytes, error) {
 	c.Session = &Session{
 		CtrlSharedSecret: ctrlSharedSecret,
 	}
-	return msg.RawPkt()
+	return msg, nil
 }
 
-func (c *Client) handshakePartTwo(data *apna.Pkt) (common.RawBytes, error) {
+func (c *Client) handshakePartTwo(data *apna.Pkt) (*apna.Pkt, error) {
 	if data.NextHeader != 0x01 {
 		return nil, common.NewBasicError(ErrUnexpectedPacket, nil, "expected",
 			0x01, "got", data.NextHeader)
@@ -82,5 +82,5 @@ func (c *Client) handshakePartTwo(data *apna.Pkt) (common.RawBytes, error) {
 	if err != nil {
 		return nil, err
 	}
-	return reply.RawPkt()
+	return reply, nil
 }

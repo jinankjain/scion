@@ -53,6 +53,14 @@ func initApnaMS(conf *config.Config, client *Client, network string) error {
 	if err != nil {
 		return err
 	}
+	macKeyReply, err := client.ApnaMS.MacKeyRegister(config.LocalAddr.Host.IP(),
+		uint16(config.LocalAddr.L4Port), conf.HMACKey)
+	if err != nil {
+		return err
+	}
+	if macKeyReply.ErrorCode != apnams.ErrorMacKeyRegisterOk {
+		return common.NewBasicError(macKeyReply.ErrorCode.String(), nil)
+	}
 	pubkey, privkey, err := crypto.GenKeyPairs(crypto.Curve25519xSalsa20Poly1305)
 	if err != nil {
 		return err
@@ -97,7 +105,6 @@ func startClient(args []string) {
 	if err != nil {
 		panic(err)
 	}
-	log.Info("Client configuration", "conf", conf)
 	// 2. Initialize APNAD deamon
 	network := "udp4"
 	client = &Client{}
@@ -113,48 +120,43 @@ func startClient(args []string) {
 		log.Crit("Unable to initialize SCION network", "err", err)
 	}
 	log.Info("SCION Network successfully initialized")
-	conn, err := snet.DialSCION(network, &config.LocalAddr, &config.RemoteAddr)
+	conn, err := snet.ListenSCION(network, &config.LocalAddr)
 	if err != nil {
 		panic(err)
 	}
+	//conn.WriteHack([]byte("hello world"))
 	log.Info("connection params", "conn", conn.LocalSnetAddr())
 	msgPartOne, err := client.handshakePartOne()
+	msgPartOne.LocalPort = config.LocalAddr.L4Port
+	msgPartOne.RemotePort = config.RemoteAddr.L4Port
 	if err != nil {
 		panic(err)
 	}
-	n, err := conn.Write(msgPartOne)
+	n, err := conn.WriteApnaTo(msgPartOne, &config.RemoteAddr)
 	if err != nil {
 		panic(err)
 	}
 	log.Info("Bytes sent", "len", n)
-	buf := make([]byte, 1024)
-	n, err = conn.Read(buf)
+	pkt, _, err := conn.ReadApna()
 	if err != nil {
 		panic(err)
 	}
-	log.Info("Bytes received", "len", n)
-	pld, err := apna.NewPktFromRaw(buf)
+	msgPartTwo, err := client.handshakePartTwo(pkt)
+	msgPartTwo.LocalPort = config.LocalAddr.L4Port
+	msgPartTwo.RemotePort = config.RemoteAddr.L4Port
 	if err != nil {
 		panic(err)
 	}
-	msgPartTwo, err := client.handshakePartTwo(pld)
-	if err != nil {
-		panic(err)
-	}
-	n, err = conn.Write(msgPartTwo)
+	n, err = conn.WriteApnaTo(msgPartTwo, &config.RemoteAddr)
 	if err != nil {
 		panic(err)
 	}
 	log.Info("Number of bytes written", "len", n)
-	n, err = conn.Read(buf)
+	pkt2, _, err := conn.ReadApna()
 	if err != nil {
 		panic(err)
 	}
-	finalReply, err := apna.NewPktFromRaw(buf)
-	if err != nil {
-		panic(err)
-	}
-	decryptData, err := apnams.DecryptData(client.Session.SharedSecret, finalReply.Data)
+	decryptData, err := apnams.DecryptData(client.Session.SharedSecret, pkt2.Data)
 	if err != nil {
 		panic(err)
 	}

@@ -41,10 +41,18 @@ func initApnaMS(conf *config.Config, server *Server, network string) error {
 	var err error
 	service := apnams.NewService(conf.IP.String(), conf.Port)
 	server.ApnaMS, err = service.Connect()
-	server.SessionMap = make(map[string]*Session)
 	if err != nil {
 		return err
 	}
+	macKeyReply, err := server.ApnaMS.MacKeyRegister(config.LocalAddr.Host.IP(),
+		uint16(config.LocalAddr.L4Port), conf.HMACKey)
+	if err != nil {
+		return err
+	}
+	if macKeyReply.ErrorCode != apnams.ErrorMacKeyRegisterOk {
+		return common.NewBasicError(macKeyReply.ErrorCode.String(), nil)
+	}
+	server.SessionMap = make(map[string]*Session)
 	pubkey, privkey, err := crypto.GenKeyPairs(crypto.Curve25519xSalsa20Poly1305)
 	if err != nil {
 		return err
@@ -85,7 +93,6 @@ func startServer(args []string) {
 		panic(err)
 	}
 	server.Config = conf
-	log.Info("Server configuration", "conf", conf)
 	// 2. Initialize apnams deamon
 	network := "udp4"
 	err = initApnaMS(conf, &server, network)

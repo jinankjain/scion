@@ -82,7 +82,6 @@ func handleEphIDGeneration(req *apnams.EphIDGenerationReq) *apnams.EphIDGenerati
 	mapSiphashToHost[hostID.String()] = req.Addr.Addr
 	expTime := getExpTime(req.Kind)
 	hid := apna.GetHID(req.Kind, hostID, expTime)
-
 	ephid, err := apna.EncryptAndSignHostID(hid, apnams.ApnaMSConfig.AESKey,
 		apnams.ApnaMSConfig.HMACKey)
 	if err != nil {
@@ -91,7 +90,6 @@ func handleEphIDGeneration(req *apnams.EphIDGenerationReq) *apnams.EphIDGenerati
 		}
 		return reply
 	}
-
 	cert := &apnams.Certificate{
 		Ephid:    common.RawBytes(ephid),
 		Pubkey:   req.Pubkey,

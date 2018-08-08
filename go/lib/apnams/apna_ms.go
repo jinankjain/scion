@@ -60,6 +60,9 @@ type Connector interface {
 	DNSRequest(addr *ServiceAddr) (*DNSReply, error)
 	DNSRegister(addr *ServiceAddr,
 		cert Certificate) (*DNSRegisterReply, error)
+	MacKeyRequest(addr common.RawBytes, port uint16) (*MacKeyReply, error)
+	MacKeyRegister(addr net.IP, port uint16,
+		key common.RawBytes) (*MacKeyRegisterReply, error)
 	SiphashToHostRequest(siphash common.RawBytes) (*SiphashToHostReply, error)
 }
 
@@ -150,4 +153,44 @@ func (c *connector) SiphashToHostRequest(siphash common.RawBytes) (*SiphashToHos
 		return nil, err
 	}
 	return &reply.(*Pld).SiphashToHostReply, nil
+}
+
+func (c *connector) MacKeyRegister(addr net.IP, port uint16,
+	key common.RawBytes) (*MacKeyRegisterReply, error) {
+	reply, err := c.dispatcher.Request(
+		context.Background(),
+		&Pld{
+			Id:    c.nextID(),
+			Which: proto.APNAMSMsg_Which_macKeyRegister,
+			MacKeyRegister: MacKeyRegister{
+				Addr: addr,
+				Port: port,
+				Key:  key,
+			},
+		},
+		c.addr,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &reply.(*Pld).MacKeyRegisterReply, nil
+}
+
+func (c *connector) MacKeyRequest(addr common.RawBytes, port uint16) (*MacKeyReply, error) {
+	reply, err := c.dispatcher.Request(
+		context.Background(),
+		&Pld{
+			Id:    c.nextID(),
+			Which: proto.APNAMSMsg_Which_macKeyReq,
+			MacKeyReq: MacKeyReq{
+				Addr: addr,
+				Port: port,
+			},
+		},
+		c.addr,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &reply.(*Pld).MacKeyReply, nil
 }

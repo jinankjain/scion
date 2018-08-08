@@ -46,6 +46,7 @@
 package snet
 
 import (
+	"fmt"
 	"net"
 	"time"
 
@@ -195,8 +196,19 @@ func (n *Network) ListenSCIONWithBindSVC(network string, laddr, baddr *Addr,
 	if laddr.Host.IP().Equal(net.IPv4zero) {
 		return nil, common.NewBasicError("Binding to 0.0.0.0 not supported", nil)
 	}
+	uaddrString := fmt.Sprintf("%s:%v", laddr.Host.String(), laddr.L4Port)
+	uaddr, err := net.ResolveUDPAddr("udp", uaddrString)
+	if err != nil {
+		return nil, common.NewBasicError("Unable to resolve UDP addr", err)
+	}
+	udpConn, err := net.ListenUDP("udp", uaddr)
+	if err != nil {
+		return nil, common.NewBasicError("Unable to listen on UDP addr", err)
+	}
+	log.Info("Network address on which service is listening", "addr", uaddrString)
 	conn := &Conn{
 		net:        network,
+		udpConn:    udpConn,
 		scionNet:   n,
 		recvBuffer: make(common.RawBytes, BufSize),
 		sendBuffer: make(common.RawBytes, BufSize),

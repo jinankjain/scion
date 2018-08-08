@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/scionproto/scion/go/lib/addr"
+	"github.com/scionproto/scion/go/lib/apna"
+	"github.com/scionproto/scion/go/lib/apnams"
 	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/snet"
@@ -17,20 +19,35 @@ const (
 	ErrorConf     = "Unable to load configuration"
 	ErrorDispInit = "Unable to initialize dispatcher"
 	ErrorSNET     = "Unable to create local SCION Network context"
-	MaxBufSize    = 2 << 16
+	ErrorApnaMS   = "Unable to connect to apna management service"
+	MaxBufSize    = 2 << 12
+	ApnaMSIP      = "127.0.0.1"
+	ApnaMSPort    = 6000
 )
 
 func (a *ApnaSrv) setup() error {
 	a.MacQueue = make(chan svcPkt, 16)
 	a.SvcForwardQueue = make(chan svcPkt, 16)
 	a.SvcRecieveQueue = make(chan common.RawBytes, 16)
-	a.EndHostForwardQueue = make(chan pkt, 16)
+	a.EndHostForwardQueue = make(chan svcPkt, 16)
 	a.FailureQueue = make(chan pkt, 16)
 	a.EndHostRecieveQueue = make(chan pkt, 16)
+	a.HostToMacKey = make(map[string]common.RawBytes)
+	a.mapSiphashToHost = make(map[string]net.IP)
 	if err := initSNET(a.Config.PublicAddr.IA, initAttempts, initInterval); err != nil {
 		return common.NewBasicError(ErrorSNET, err)
 	}
+	con, err := initApnaMS()
+	if err != nil {
+		return common.NewBasicError(ErrorApnaMS, err)
+	}
+	a.ApnaMSConn = con
 	return nil
+}
+
+func initApnaMS() (apnams.Connector, error) {
+	service := apnams.NewService(ApnaMSIP, ApnaMSPort)
+	return service.Connect()
 }
 
 func initSNET(ia addr.IA, attempts int, sleep time.Duration) (err error) {
@@ -45,22 +62,37 @@ func initSNET(ia addr.IA, attempts int, sleep time.Duration) (err error) {
 }
 
 func (a *ApnaSrv) StartSVC(pubAddr, bindAddr *snet.Addr, done chan error) {
-	conn, err := snet.ListenSCIONWithBindSVC("udp4", pubAddr, bindAddr,
+	copyPubAddr := pubAddr.Copy()
+	copyPubAddr.L4Port += 1
+	conn, err := snet.ListenSCIONWithBindSVC("udp4", copyPubAddr, bindAddr,
 		addr.SvcAP)
-	if err != nil {
+	for err != nil {
 		log.Error(err.Error())
-		done <- err
+		pubAddr.L4Port += 1
+		conn, err = snet.ListenSCIONWithBindSVC("udp4", copyPubAddr, bindAddr,
+			addr.SvcAP)
 	}
 	a.SVCConn = conn
-	log.Info("Started APNA service on", "addr", pubAddr.String())
+	log.Info("Started APNA service on", "addr", copyPubAddr.String())
 	buf := make([]byte, MaxBufSize)
 	for {
-		len, addr, err := conn.ReadFrom(buf)
+		_, addr, err := conn.ReadFromSCION(buf)
+		pkt, err := apna.NewPktFromRaw(buf)
+		if err != nil {
+			log.Info("Pkt parsing failed!!!", "err", err)
+			continue
+		}
 		if err != nil {
 			log.Error("Unable to read packet from the network", "err", err)
 			continue
 		}
-		log.Info("Message info", "size", len, "addr", addr, "info", string(buf[:len]))
+		// Create the SVCPkt here
+		sPkt := &apna.SVCPkt{
+			RemoteIA: addr.IA.IAInt(),
+			ApnaPkt:  *pkt,
+		}
+		// Read will read the pkt and send the raddr to guy
+		a.EndHostForwardQueue <- sPkt
 	}
 }
 
@@ -79,7 +111,7 @@ func (a *ApnaSrv) StartServer(addr *snet.Addr, done chan error) {
 	log.Info("Started UDP server on", "addr", laddr.String())
 	buf := make([]byte, MaxBufSize)
 	for {
-		len, raddr, err := conn.ReadFrom(buf)
+		len, _, err := conn.ReadFrom(buf)
 		if err != nil {
 			log.Error("Unable to read network packet", "err", err)
 			continue
@@ -87,6 +119,5 @@ func (a *ApnaSrv) StartServer(addr *snet.Addr, done chan error) {
 		tmp := make([]byte, len)
 		copy(tmp, buf[:len])
 		a.SvcRecieveQueue <- tmp
-		log.Info("Message info", "size", len, "addr", raddr, "info", string(buf[:len]))
 	}
 }
