@@ -21,8 +21,6 @@ const (
 	ErrorSNET     = "Unable to create local SCION Network context"
 	ErrorApnaMS   = "Unable to connect to apna management service"
 	MaxBufSize    = 2 << 12
-	ApnaMSIP      = "127.0.0.1"
-	ApnaMSPort    = 6000
 )
 
 func (a *ApnaSrv) setup() error {
@@ -37,7 +35,7 @@ func (a *ApnaSrv) setup() error {
 	if err := initSNET(a.Config.PublicAddr.IA, initAttempts, initInterval); err != nil {
 		return common.NewBasicError(ErrorSNET, err)
 	}
-	con, err := initApnaMS()
+	con, err := initApnaMS(a.Config.MSConf.IP.String(), a.Config.MSConf.Port)
 	if err != nil {
 		return common.NewBasicError(ErrorApnaMS, err)
 	}
@@ -45,8 +43,8 @@ func (a *ApnaSrv) setup() error {
 	return nil
 }
 
-func initApnaMS() (apnams.Connector, error) {
-	service := apnams.NewService(ApnaMSIP, ApnaMSPort)
+func initApnaMS(ip string, port int) (apnams.Connector, error) {
+	service := apnams.NewService(ip, port)
 	return service.Connect()
 }
 
