@@ -1,7 +1,7 @@
 {
-	"ip": "127.0.0.1",
+	"ip": "10.0.32.1",
 	"port": 6000,
 	"hmacKey": "MSmTRQ4R2OcWmMlUChWJZpnDrUUkkg693+6/hro7JkGacpaZQjzDsL/RoCDs2S6tzIs/8gOxumihoVpCKajV3A==",
 	"aesKey": "fZfEnDO9xbFE4iYhzWrSAQ==",
-    "myip": "127.0.0.1"
+    "myip": "10.0.32.8"
 }

@@ -15,6 +15,7 @@ type Config struct {
 	HMACKey      common.RawBytes `json:"hmacKey"`
 	IP           net.IP          `json:"ip"`
 	Port         int             `json:"port"`
+	MyIP         net.IP          `json:"myip"`
 }
 
 const (

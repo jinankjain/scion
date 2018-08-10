@@ -20,25 +20,27 @@ type Service interface {
 type service struct {
 	ip   string
 	port int
+	myip net.IP
 }
 
-func NewService(ip string, port int) Service {
+func NewService(ip string, port int, myip net.IP) Service {
 	return &service{
 		ip:   ip,
 		port: port,
+		myip: myip,
 	}
 }
 
 func (s *service) Connect() (Connector, error) {
-	return connect(s.ip, s.port)
+	return connect(s.ip, s.port, s.myip)
 }
 
-func connect(ip string, port int) (*connector, error) {
+func connect(ip string, port int, myip net.IP) (*connector, error) {
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%v:%v", ip, port))
 	if err != nil {
 		return nil, err
 	}
-	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: net.IPv4(10, 0, 32, 2), Port: 0})
+	conn, err := net.ListenUDP("udp", &net.UDPAddr{IP: myip, Port: 0})
 	if err != nil {
 		return nil, err
 	}

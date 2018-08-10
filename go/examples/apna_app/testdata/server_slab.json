@@ -2,7 +2,7 @@
     "apnadPubkey": "mM3PVuXwnECecniEa1lbvEQ3iGYe6hR6OEFRUXKZ1Ro=",
     "symmetricKey": "fZfEnDO9xbFE4iYhzWrSAQ==",
     "hmacKey": "qxBaApMRz2zTFlQ1tD94RriDNHT8ISLxaXKCN2cRez0n5sNBErOo9LCRn26Zwrgtb2z2PH/uRueO4pKDD69aiA==",
-    "ip": "127.0.0.1",
+    "ip": "10.0.32.1",
     "port": 6000,
-    "myip": "127.0.0.1"
+    "myip": "10.0.32.9"
 }

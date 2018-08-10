@@ -48,7 +48,7 @@ var client *Client
 
 func initApnaMS(conf *config.Config, client *Client, network string) error {
 	var err error
-	service := apnams.NewService(conf.IP.String(), conf.Port)
+	service := apnams.NewService(conf.IP.String(), conf.Port, conf.MyIP)
 	client.ApnaMS, err = service.Connect()
 	if err != nil {
 		return err

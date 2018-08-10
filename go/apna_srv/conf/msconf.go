@@ -18,6 +18,7 @@ type MSConf struct {
 	Port    int             `json:"port"`
 	HMACKey common.RawBytes `json:"hmacKey"`
 	AESKey  common.RawBytes `json:"aesKey"`
+	MyIP    net.IP          `json:"myip"`
 }
 
 func loadMSConfig(path string) (*MSConf, error) {

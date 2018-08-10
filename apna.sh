@@ -10,6 +10,16 @@ cmd_run_apna_client() {
     ./bin/apna_app -a go/examples/apna_app/testdata/client.json -r 2-ff00:0:222,[127.0.0.1]:50049 -l 1-ff00:0:133,[127.0.0.4]:50045 client
 }
 
+cmd_run_apna_slabserver() {
+    echo "Running apna server"
+    ./bin/apna_app -a go/examples/apna_app/testdata/server_slab.json -l 2-ff00:0:222,[127.0.0.1]:50049 server
+}
+
+cmd_run_apna_slabclient() {
+    echo "Running apna client"
+    ./bin/apna_app -a go/examples/apna_app/testdata/client_slab.json -r 2-ff00:0:222,[127.0.0.1]:50049 -l 1-ff00:0:133,[127.0.0.4]:50045 client
+}
+
 cmd_run_ms() {
     echo "Running management service"
     ./bin/apna_ms -config go/apna_ms/testdata/apna_ms.json
@@ -20,6 +30,8 @@ COMMAND="$1"
 case "$COMMAND" in
     server) cmd_run_apna_server ;;
     client) cmd_run_apna_client ;;
+    sserver) cmd_run_apna_slabserver ;;
+    sclient) cmd_run_apna_slabclient ;;
     ms) cmd_run_ms ;;
 esac
 

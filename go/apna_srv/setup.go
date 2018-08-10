@@ -35,7 +35,7 @@ func (a *ApnaSrv) setup() error {
 	if err := initSNET(a.Config.PublicAddr.IA, initAttempts, initInterval); err != nil {
 		return common.NewBasicError(ErrorSNET, err)
 	}
-	con, err := initApnaMS(a.Config.MSConf.IP.String(), a.Config.MSConf.Port)
+	con, err := initApnaMS(a.Config.MSConf.IP.String(), a.Config.MSConf.Port, a.Config.MSConf.MyIP)
 	if err != nil {
 		return common.NewBasicError(ErrorApnaMS, err)
 	}
@@ -43,8 +43,8 @@ func (a *ApnaSrv) setup() error {
 	return nil
 }
 
-func initApnaMS(ip string, port int) (apnams.Connector, error) {
-	service := apnams.NewService(ip, port)
+func initApnaMS(ip string, port int, myip net.IP) (apnams.Connector, error) {
+	service := apnams.NewService(ip, port, myip)
 	return service.Connect()
 }
 
