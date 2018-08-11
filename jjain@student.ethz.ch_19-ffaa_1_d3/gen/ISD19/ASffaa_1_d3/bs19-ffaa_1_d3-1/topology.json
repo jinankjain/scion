@@ -1,0 +1,88 @@
+{
+  "BeaconService": {
+    "bs19-ffaa_1_d3-1": {
+      "Public": [
+        {
+          "L4Port": 31041,
+          "Addr": "127.0.0.1"
+        }
+      ]
+    }
+  },
+  "Core": false,
+  "Overlay": "UDP/IPv4",
+  "ISD_AS": "19-ffaa:1:d3",
+  "CertificateService": {
+    "cs19-ffaa_1_d3-1": {
+      "Public": [
+        {
+          "L4Port": 31043,
+          "Addr": "127.0.0.1"
+        }
+      ]
+    }
+  },
+  "MTU": 1472,
+  "BorderRouters": {
+    "br19-ffaa_1_d3-1": {
+      "Interfaces": {
+        "1": {
+          "Overlay": "UDP/IPv4",
+          "InternalAddrIdx": 0,
+          "Bind": {
+            "L4Port": 50000,
+            "Addr": "10.0.8.36"
+          },
+          "ISD_AS": "19-ffaa:0:1303",
+          "MTU": 1472,
+          "LinkTo": "PARENT",
+          "Remote": {
+            "L4Port": 50049,
+            "Addr": "10.0.8.1"
+          },
+          "Public": {
+            "L4Port": 50000,
+            "Addr": "10.0.8.36"
+          },
+          "Bandwidth": 1000
+        }
+      },
+      "InternalAddrs": [
+        {
+          "Public": [
+            {
+              "L4Port": 31042,
+              "Addr": "127.0.0.1"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "SibraService": {
+    "sb19-ffaa_1_d3-1": {
+      "Public": [
+        {
+          "L4Port": 31045,
+          "Addr": "127.0.0.1"
+        }
+      ]
+    }
+  },
+  "PathService": {
+    "ps19-ffaa_1_d3-1": {
+      "Public": [
+        {
+          "L4Port": 31044,
+          "Addr": "127.0.0.1"
+        }
+      ]
+    }
+  },
+  "ZookeeperService": {
+    "1": {
+      "L4Port": 2181,
+      "Addr": "127.0.0.1"
+    }
+  }
+}

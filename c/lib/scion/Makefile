@@ -1,7 +1,7 @@
 .PHONY: all clean install uninstall
 
 CC = clang
-CFLAGS ?= -Wall -Werror -g -fPIC -O2
+CFLAGS ?= -Wall -g -fPIC -O2
 LDFLAGS ?= -shared -Wl,-z,defs
 
 SRCS = $(filter-out $(BINARY).c, $(wildcard *.c))

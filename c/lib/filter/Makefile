@@ -1,7 +1,7 @@
 .PHONY: all clean install uninstall
 
 CC = clang
-CFLAGS ?= -Wall -Werror -g -fPIC
+CFLAGS ?= -Wall -g -fPIC
 LDFLAGS ?= -shared -Wl,-z,defs -lscion -lzlog
 
 LIB_DIR = ..

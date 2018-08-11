@@ -1,0 +1,32 @@
+{
+    "0": {
+        "CanIssue": false,
+        "Signature": "N6cEEfBpSecigXGebUqL3oPstdHVFNC5J2qZCCFn4O01oQvsByr8jdnQvriBUt01Ry/vYlfBrYOm2EYpU/a4Bg==",
+        "EncAlgorithm": "curve25519xsalsa20poly1305",
+        "ExpirationTime": 1561474358,
+        "TRCVersion": 1,
+        "Comment": "AS Certificate",
+        "Subject": "19-ffaa:1:d3",
+        "Issuer": "19-ffaa:0:1301",
+        "SubjectSignKey": "LbUMbzdkBPBski7oIfIPSQTURux+Zx4mBR+TCI50C54=",
+        "SignAlgorithm": "ed25519",
+        "SubjectEncKey": "Kp8HS7wdgNjbMAWuxTpU/U+eyurdKlI82+bke0j1nVI=",
+        "Version": 1,
+        "IssuingTime": 1533913001
+    },
+    "1": {
+        "CanIssue": true,
+        "Signature": "6TlK8yH/4ZppfhHBphKPsr07CULrL9zzv+8B3K0pgi2IT7qbzOGY7gvlk8A+n235OSB4G/24Qb5w29Bdm5LgAA==",
+        "EncAlgorithm": "curve25519xsalsa20poly1305",
+        "ExpirationTime": 1561474359,
+        "TRCVersion": 1,
+        "Comment": "Core AS Certificate",
+        "Subject": "19-ffaa:0:1301",
+        "Issuer": "19-ffaa:0:1301",
+        "SubjectSignKey": "7Hn20C9ldaK0i1Ees8ieozxjzBKorSTbufci7sh0W/w=",
+        "SignAlgorithm": "ed25519",
+        "SubjectEncKey": "yyeu38ddvsZ2yHRXBmKB6yMaoyxWhX4X7wSb5YpRKiA=",
+        "Version": 1,
+        "IssuingTime": 1530024759
+    }
+}

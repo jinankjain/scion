@@ -114,7 +114,7 @@ func startClient(args []string) {
 		panic(err)
 	}
 	// 3. Initialize SCION related stuff
-	sciondSock := sciond.GetDefaultSCIONDPath(&config.LocalAddr.IA)
+	sciondSock := sciond.GetDefaultSCIONDPath(nil)
 	dispatcher := getDefaultDispatcherSock()
 	if err := snet.Init(config.LocalAddr.IA, sciondSock, dispatcher); err != nil {
 		log.Crit("Unable to initialize SCION network", "err", err)

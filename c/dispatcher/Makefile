@@ -1,7 +1,7 @@
 .PHONY: all clean install uninstall
 
 CC = clang
-CFLAGS ?= -Wall -Werror -g -O2
+CFLAGS ?= -Wall -g -O2
 LDFLAGS ?= -lpthread -lzlog -Wl,-Bstatic -ltcpmw -llwip -lfilter -lscion -Wl,-Bdynamic
 
 LIB_DIR = ../lib

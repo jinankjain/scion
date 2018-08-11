@@ -29,7 +29,7 @@ const (
 	ASBits    = 48
 	BGPASBits = 32
 	MaxISD    = (1 << ISDBits) - 1
-	MaxAS     = (1 << ASBits) - 1
+	MaxAS uint64     = (1 << ASBits) - 1
 	MaxBGPAS  = (1 << BGPASBits) - 1
 
 	asPartBits = 16
@@ -132,7 +132,7 @@ func (as AS) FileFmt() string {
 }
 
 func (as AS) fmt(sep byte) string {
-	if as > MaxAS {
+	if uint64(as) > MaxAS {
 		return fmt.Sprintf("%d [Illegal AS: larger than %d]", as, MaxAS)
 	}
 	// Format BGP ASes as decimal
@@ -225,7 +225,7 @@ func (ia IA) Write(b common.RawBytes) {
 }
 
 func (ia IA) IAInt() IAInt {
-	return IAInt(ia.I)<<ASBits | IAInt(ia.A&MaxAS)
+	return IAInt(ia.I)<<ASBits | IAInt(uint64(ia.A)&MaxAS)
 }
 
 func (ia IA) IsZero() bool {
@@ -252,5 +252,5 @@ func (ia IA) FileFmt(prefixes bool) string {
 type IAInt uint64
 
 func (iaI IAInt) IA() IA {
-	return IA{I: ISD(iaI >> ASBits), A: AS(iaI & MaxAS)}
+	return IA{I: ISD(iaI >> ASBits), A: AS(uint64(iaI) & MaxAS)}
 }
