@@ -1,0 +1,88 @@
+{
+  "CertificateService": {
+    "cs20-ffaa_1_d4-1": {
+      "Public": [
+        {
+          "L4Port": 31043,
+          "Addr": "127.0.0.1"
+        }
+      ]
+    }
+  },
+  "PathService": {
+    "ps20-ffaa_1_d4-1": {
+      "Public": [
+        {
+          "L4Port": 31044,
+          "Addr": "127.0.0.1"
+        }
+      ]
+    }
+  },
+  "BeaconService": {
+    "bs20-ffaa_1_d4-1": {
+      "Public": [
+        {
+          "L4Port": 31041,
+          "Addr": "127.0.0.1"
+        }
+      ]
+    }
+  },
+  "Overlay": "UDP/IPv4",
+  "ZookeeperService": {
+    "1": {
+      "L4Port": 2181,
+      "Addr": "127.0.0.1"
+    }
+  },
+  "ISD_AS": "20-ffaa:1:d4",
+  "SibraService": {
+    "sb20-ffaa_1_d4-1": {
+      "Public": [
+        {
+          "L4Port": 31045,
+          "Addr": "127.0.0.1"
+        }
+      ]
+    }
+  },
+  "MTU": 1472,
+  "BorderRouters": {
+    "br20-ffaa_1_d4-1": {
+      "InternalAddrs": [
+        {
+          "Public": [
+            {
+              "L4Port": 31042,
+              "Addr": "127.0.0.1"
+            }
+          ]
+        }
+      ],
+      "Interfaces": {
+        "1": {
+          "InternalAddrIdx": 0,
+          "Public": {
+            "L4Port": 50000,
+            "Addr": "10.0.8.11"
+          },
+          "ISD_AS": "20-ffaa:0:1404",
+          "Overlay": "UDP/IPv4",
+          "Remote": {
+            "L4Port": 50023,
+            "Addr": "10.0.8.1"
+          },
+          "Bandwidth": 1000,
+          "MTU": 1472,
+          "Bind": {
+            "L4Port": 50000,
+            "Addr": "10.0.8.11"
+          },
+          "LinkTo": "PARENT"
+        }
+      }
+    }
+  },
+  "Core": false
+}

@@ -15,7 +15,7 @@ const (
 )
 
 const (
-	msConfPath = "go/apna_srv/testdata/apna_srv.json"
+	msConfPath = "go/apna_srv/testdata/apna_srv_slab.json"
 )
 
 type Conf struct {
