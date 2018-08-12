@@ -69,9 +69,9 @@ type Connector interface {
 }
 
 type connector struct {
-	dispatcher *disp.Dispatcher
 	requestID  uint64
 	addr       net.Addr
+	dispatcher *disp.Dispatcher
 }
 
 func (c *connector) nextID() uint64 {
