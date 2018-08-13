@@ -8,6 +8,7 @@ import (
 
 	"github.com/scionproto/scion/go/examples/apna_app/internal/client"
 	"github.com/scionproto/scion/go/examples/apna_app/internal/config"
+	"github.com/scionproto/scion/go/examples/apna_app/internal/ephidbenchmark"
 	"github.com/scionproto/scion/go/examples/apna_app/internal/server"
 )
 
@@ -33,4 +34,5 @@ func init() {
 
 	RootCmd.AddCommand(server.Cmd)
 	RootCmd.AddCommand(client.Cmd)
+	RootCmd.AddCommand(ephidbenchmark.Cmd)
 }

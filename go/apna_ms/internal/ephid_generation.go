@@ -50,6 +50,8 @@ func generateHostID(addr net.IP) (common.RawBytes, error) {
 
 func handleSiphashToHost(req *apnams.SiphashToHostReq) *apnams.SiphashToHostReply {
 	log.Debug("Got SiphashToHost Request", "request", req)
+	bench := &apnams.SiphashBenchmark{}
+	start := time.Now()
 	if val, ok := mapSiphashToHost[req.Siphash.String()]; ok {
 		reply := &apnams.SiphashToHostReply{
 			ErrorCode: apnams.ErrorSiphashToHostOk,
@@ -62,6 +64,7 @@ func handleSiphashToHost(req *apnams.SiphashToHostReq) *apnams.SiphashToHostRepl
 		ErrorCode: apnams.ErrorSiphashToHostNotFound,
 	}
 	log.Debug("Reply EphIDGeneration sent", "reply", reply)
+	bench.SiphashTime = time.Since(start)
 	return reply
 }
 
@@ -72,6 +75,8 @@ func handleSiphashToHost(req *apnams.SiphashToHostReq) *apnams.SiphashToHostRepl
 // @param: registerAddr -> EphID generation for this address
 func handleEphIDGeneration(req *apnams.EphIDGenerationReq) *apnams.EphIDGenerationReply {
 	log.Debug("Got EphIDGeneration request", "request", req)
+	bench := &apnams.EphIDGenerationBenchmark{}
+	start := time.Now()
 	hostID, err := generateHostID(req.Addr.Addr)
 	if err != nil {
 		reply := &apnams.EphIDGenerationReply{
@@ -80,7 +85,11 @@ func handleEphIDGeneration(req *apnams.EphIDGenerationReq) *apnams.EphIDGenerati
 		return reply
 	}
 	mapSiphashToHost[hostID.String()] = req.Addr.Addr
+	bench.HostID = time.Since(start)
+	start = time.Now()
 	expTime := getExpTime(req.Kind)
+	bench.ExpTime = time.Since(start)
+	start = time.Now()
 	hid := apna.GetHID(req.Kind, hostID, expTime)
 	ephid, err := apna.EncryptAndSignHostID(hid, apnams.ApnaMSConfig.AESKey,
 		apnams.ApnaMSConfig.HMACKey)
@@ -90,6 +99,8 @@ func handleEphIDGeneration(req *apnams.EphIDGenerationReq) *apnams.EphIDGenerati
 		}
 		return reply
 	}
+	bench.Encrypt = time.Since(start)
+	start = time.Now()
 	cert := &apnams.Certificate{
 		Ephid:    common.RawBytes(ephid),
 		Pubkey:   req.Pubkey,
@@ -102,5 +113,7 @@ func handleEphIDGeneration(req *apnams.EphIDGenerationReq) *apnams.EphIDGenerati
 		Cert:      *cert,
 	}
 	log.Debug("Reply EphIDGeneration sent", "reply", reply)
+	bench.Mac = time.Since(start)
+	ephidGenBenchmarks = append(ephidGenBenchmarks, bench)
 	return reply
 }
