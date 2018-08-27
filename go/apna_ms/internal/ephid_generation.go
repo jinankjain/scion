@@ -65,6 +65,7 @@ func handleSiphashToHost(req *apnams.SiphashToHostReq) *apnams.SiphashToHostRepl
 	}
 	log.Debug("Reply EphIDGeneration sent", "reply", reply)
 	bench.SiphashTime = time.Since(start)
+	siphashBenchmarks = append(siphashBenchmarks, bench)
 	return reply
 }
 

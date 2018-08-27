@@ -27,6 +27,7 @@ func handleDNSRequest(req *apnams.DNSReq) *apnams.DNSReply {
 	}
 	log.Debug("DNS Request Reply sent", "reply", reply)
 	bench.RequestTime = time.Since(start)
+	dnsRequestBenchmarks = append(dnsRequestBenchmarks, bench)
 	return reply
 }
 
@@ -41,5 +42,6 @@ func handleDNSRegister(req *apnams.DNSRegister) *apnams.DNSRegisterReply {
 	}
 	log.Debug("DNS Register Reply sent", "reply", reply)
 	bench.RegisterTime = time.Since(start)
+	dnsRegisterBenchmarks = append(dnsRegisterBenchmarks, bench)
 	return reply
 }

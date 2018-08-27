@@ -13,7 +13,7 @@ var macKeyRegister map[string]common.RawBytes
 
 func handleMacKeyRequest(req *apnams.MacKeyReq) *apnams.MacKeyReply {
 	log.Debug("Got MacKey request", "request", req)
-	bench := apnams.MACRequestBenchmark{}
+	bench := &apnams.MACRequestBenchmark{}
 	start := time.Now()
 	key := fmt.Sprintf("%s:%v", req.Addr, req.Port)
 	val, ok := macKeyRegister[key]
@@ -30,6 +30,7 @@ func handleMacKeyRequest(req *apnams.MacKeyReq) *apnams.MacKeyReply {
 	}
 	log.Debug("MAC Key request Reply sent", "reply", reply)
 	bench.RequestTime = time.Since(start)
+	macRequestBenchmarks = append(macRequestBenchmarks, bench)
 	return reply
 }
 
@@ -52,5 +53,6 @@ func handleMacKeyRegister(req *apnams.MacKeyRegister) *apnams.MacKeyRegisterRepl
 	}
 	log.Debug("MacKey Register Reply sent", "reply", reply)
 	bench.RegisterTime = time.Since(start)
+	macRegisterBenchmarks = append(macRegisterBenchmarks, bench)
 	return reply
 }

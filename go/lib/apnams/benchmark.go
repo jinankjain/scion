@@ -20,18 +20,38 @@ type DNSRegisterBenchmark struct {
 	RegisterTime time.Duration
 }
 
+func (b *DNSRegisterBenchmark) String() string {
+	return fmt.Sprintf("%d", b.RegisterTime)
+}
+
 type DNSRequestBenchmark struct {
 	RequestTime time.Duration
+}
+
+func (b *DNSRequestBenchmark) String() string {
+	return fmt.Sprintf("%d", b.RequestTime)
 }
 
 type MACRegisterBenchmark struct {
 	RegisterTime time.Duration
 }
 
+func (b *MACRegisterBenchmark) String() string {
+	return fmt.Sprintf("%d", b.RegisterTime)
+}
+
 type MACRequestBenchmark struct {
 	RequestTime time.Duration
 }
 
+func (b *MACRequestBenchmark) String() string {
+	return fmt.Sprintf("%d", b.RequestTime)
+}
+
 type SiphashBenchmark struct {
 	SiphashTime time.Duration
+}
+
+func (b *SiphashBenchmark) String() string {
+	return fmt.Sprintf("%d", b.SiphashTime)
 }
