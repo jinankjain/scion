@@ -9,7 +9,6 @@ import (
 	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/apnams"
 	"github.com/scionproto/scion/go/lib/common"
-	"github.com/scionproto/scion/go/lib/log"
 
 	"github.com/dchest/siphash"
 )
@@ -49,7 +48,6 @@ func generateHostID(addr net.IP) (common.RawBytes, error) {
 }
 
 func handleSiphashToHost(req *apnams.SiphashToHostReq) *apnams.SiphashToHostReply {
-	log.Debug("Got SiphashToHost Request", "request", req)
 	bench := &apnams.SiphashBenchmark{}
 	start := time.Now()
 	if val, ok := mapSiphashToHost[req.Siphash.String()]; ok {
@@ -57,13 +55,13 @@ func handleSiphashToHost(req *apnams.SiphashToHostReq) *apnams.SiphashToHostRepl
 			ErrorCode: apnams.ErrorSiphashToHostOk,
 			Host:      val,
 		}
-		log.Debug("Reply EphIDGeneration sent", "reply", reply)
+		bench.SiphashTime = time.Since(start)
+		siphashBenchmarks = append(siphashBenchmarks, bench)
 		return reply
 	}
 	reply := &apnams.SiphashToHostReply{
 		ErrorCode: apnams.ErrorSiphashToHostNotFound,
 	}
-	log.Debug("Reply EphIDGeneration sent", "reply", reply)
 	bench.SiphashTime = time.Since(start)
 	siphashBenchmarks = append(siphashBenchmarks, bench)
 	return reply
@@ -75,7 +73,6 @@ func handleSiphashToHost(req *apnams.SiphashToHostReq) *apnams.SiphashToHostRepl
 // @param: retAddr -> Return address on which response would be send back
 // @param: registerAddr -> EphID generation for this address
 func handleEphIDGeneration(req *apnams.EphIDGenerationReq) *apnams.EphIDGenerationReply {
-	log.Debug("Got EphIDGeneration request", "request", req)
 	bench := &apnams.EphIDGenerationBenchmark{}
 	start := time.Now()
 	hostID, err := generateHostID(req.Addr.Addr)
@@ -113,7 +110,6 @@ func handleEphIDGeneration(req *apnams.EphIDGenerationReq) *apnams.EphIDGenerati
 		ErrorCode: apnams.ErrorEphIDGenOk,
 		Cert:      *cert,
 	}
-	log.Debug("Reply EphIDGeneration sent", "reply", reply)
 	bench.Mac = time.Since(start)
 	ephidGenBenchmarks = append(ephidGenBenchmarks, bench)
 	return reply

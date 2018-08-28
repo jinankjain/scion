@@ -1,30 +1,33 @@
-package dnsbenchmark
+package kmsbenchmark
 
 import (
+	"encoding/binary"
+	"encoding/hex"
 	"net"
 
+	"github.com/dchest/siphash"
 	"github.com/spf13/cobra"
 
 	"github.com/scionproto/scion/go/examples/apna_app/internal/config"
 	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/apnams"
-	"github.com/scionproto/scion/go/lib/crypto"
+	"github.com/scionproto/scion/go/lib/common"
 	"github.com/scionproto/scion/go/lib/log"
 )
 
-var DNSRegisterCMD = &cobra.Command{
-	Use:   "dns_register_benchmark",
-	Short: "Run dns register benchmark",
+var MACRegisterCMD = &cobra.Command{
+	Use:   "mac_register_benchmark",
+	Short: "Run mac key register benchmark",
 	Run: func(cmd *cobra.Command, args []string) {
-		startDNSRegisterBenchmark(args)
+		startMACRegisterBenchmark(args)
 	},
 }
 
-var DNSRequestCMD = &cobra.Command{
-	Use:   "dns_request_benchmark",
-	Short: "Run dns request benchmark",
+var MACRequestCMD = &cobra.Command{
+	Use:   "mac_request_benchmark",
+	Short: "Run mac key request benchmark",
 	Run: func(cmd *cobra.Command, args []string) {
-		startDNSRequestBenchmark(args)
+		startMACRequestBenchmark(args)
 	},
 }
 
@@ -35,26 +38,26 @@ var regTrials int
 var regRepetitions int
 
 func init() {
-	reqTrials = *DNSRequestCMD.PersistentFlags().IntP("trials", "t", 10000,
+	reqTrials = *MACRequestCMD.PersistentFlags().IntP("trials", "t", 10000,
 		"Number of trials in each repetitions")
-	reqRepetitions = *DNSRequestCMD.PersistentFlags().IntP("repetitions", "n", 5,
+	reqRepetitions = *MACRequestCMD.PersistentFlags().IntP("repetitions", "n", 5,
 		"Number of repetitions")
-	regTrials = *DNSRegisterCMD.PersistentFlags().IntP("trials", "t", 10000,
+	regTrials = *MACRegisterCMD.PersistentFlags().IntP("trials", "t", 10000,
 		"Number of trials in each repetitions")
-	regRepetitions = *DNSRegisterCMD.PersistentFlags().IntP("repetitions", "n", 5,
+	regRepetitions = *MACRegisterCMD.PersistentFlags().IntP("repetitions", "n", 5,
 		"Number of repetitions")
 }
 
-type DNSBenchmark struct {
+type KMSBenchmark struct {
 	Apnad apnams.Connector
 }
 
-var dnsBenchmark DNSBenchmark
+var kmsBenchmark KMSBenchmark
 
 func initApnad(conf *config.Config) error {
 	var err error
 	svc := apnams.NewService(conf.IP.String(), conf.Port, conf.MyIP)
-	dnsBenchmark.Apnad, err = svc.Connect()
+	kmsBenchmark.Apnad, err = svc.Connect()
 	if err != nil {
 		return err
 	}
@@ -92,22 +95,13 @@ func inc(ip net.IP) {
 	}
 }
 
-func runDNSRegisterBenchmark() error {
-	pubkey, _, err := crypto.GenKeyPairs(crypto.Curve25519xSalsa20Poly1305)
-	if err != nil {
-		return err
-	}
+func runMACRegisterBenchmark(conf *config.Config) error {
 	srvAddrs, err := generateServiceAddress("127.0.0.1/18")
 	if err != nil {
 		return err
 	}
 	for i := 0; i < regTrials; i++ {
-		ephidCert, err := dnsBenchmark.Apnad.EphIDGenerationRequest(apna.CtrlEphID, srvAddrs[i],
-			pubkey)
-		if err != nil {
-			return err
-		}
-		_, err = dnsBenchmark.Apnad.DNSRegister(srvAddrs[i], ephidCert.Cert)
+		_, err = kmsBenchmark.Apnad.MacKeyRegister(srvAddrs[i].Addr, 5000, conf.HMACKey)
 		if err != nil {
 			return err
 		}
@@ -115,7 +109,7 @@ func runDNSRegisterBenchmark() error {
 	return nil
 }
 
-func startDNSRegisterBenchmark(args []string) {
+func startMACRegisterBenchmark(args []string) {
 	conf, err := config.LoadConfig()
 	if err != nil {
 		panic(err)
@@ -125,34 +119,42 @@ func startDNSRegisterBenchmark(args []string) {
 	if err != nil {
 		panic(err)
 	}
-	err = runDNSRegisterBenchmark()
+	err = runMACRegisterBenchmark(conf)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func runDNSRequestBenchmark() error {
-	pubkey, _, err := crypto.GenKeyPairs(crypto.Curve25519xSalsa20Poly1305)
-	if err != nil {
-		return err
-	}
+func generateHostID(addr net.IP) (common.RawBytes, error) {
+	// TODO(jinankjain): Check bound on n
+	hash := siphash.Hash(siphashKey1, siphashKey2, addr.To4())
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, hash)
+	return b[:apna.HostLen], nil
+}
+
+var (
+	siphashKey1 uint64
+	siphashKey2 uint64
+)
+
+func runMACRequestBenchmark(conf *config.Config) error {
 	srvAddrs, err := generateServiceAddress("127.0.0.1/18")
 	if err != nil {
 		return err
 	}
 	for i := 0; i < reqTrials; i++ {
-		ephidCert, err := dnsBenchmark.Apnad.EphIDGenerationRequest(apna.CtrlEphID, srvAddrs[i],
-			pubkey)
-		if err != nil {
-			return err
-		}
-		_, err = dnsBenchmark.Apnad.DNSRegister(srvAddrs[i], ephidCert.Cert)
+		_, err = kmsBenchmark.Apnad.MacKeyRegister(srvAddrs[i].Addr.To4(), 5000, conf.HMACKey)
 		if err != nil {
 			return err
 		}
 	}
 	for i := 0; i < reqTrials; i++ {
-		_, err := dnsBenchmark.Apnad.DNSRequest(srvAddrs[i])
+		hid, err := generateHostID(srvAddrs[i].Addr.To4())
+		if err != nil {
+			return err
+		}
+		_, err = kmsBenchmark.Apnad.MacKeyRequest(hid, 5000)
 		if err != nil {
 			return err
 		}
@@ -160,17 +162,21 @@ func runDNSRequestBenchmark() error {
 	return nil
 }
 
-func startDNSRequestBenchmark(args []string) {
+func startMACRequestBenchmark(args []string) {
 	conf, err := config.LoadConfig()
 	if err != nil {
 		panic(err)
 	}
+	siphashKey, _ := hex.DecodeString("dae7ace5b7723bd4ec5986a8d25f12c6")
+	siphashKey1 = binary.LittleEndian.Uint64(siphashKey[:8])
+	siphashKey2 = binary.LittleEndian.Uint64(siphashKey[8:])
+
 	log.Info("Server configuration", "conf", conf)
 	err = initApnad(conf)
 	if err != nil {
 		panic(err)
 	}
-	err = runDNSRequestBenchmark()
+	err = runMACRequestBenchmark(conf)
 	if err != nil {
 		panic(err)
 	}
