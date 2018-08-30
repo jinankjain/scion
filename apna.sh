@@ -35,7 +35,7 @@ COMMAND="$1"
 case "$COMMAND" in
     server) cmd_run_apna_server ;;
     client) cmd_run_apna_client ;;
-    psserver) cmd_run_apna_slabserver ;;
+    psserver) cmd_run_apna_pcslabserver ;;
     sclient1) cmd_run_apna_slabclient1 ;;
     sclient2) cmd_run_apna_slabclient2 ;;
     ms) cmd_run_ms ;;
