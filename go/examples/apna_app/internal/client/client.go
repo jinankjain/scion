@@ -165,7 +165,7 @@ func startClient(args []string) {
 	}
 	log.Info("Finally", "buf", string(decryptData), "len", n)
 	total := 0
-	size := 1 << 10
+	size := 200
 	ticker := time.NewTicker(10 * time.Second)
 	for {
 		select {
