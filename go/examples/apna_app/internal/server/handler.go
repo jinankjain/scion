@@ -1,6 +1,10 @@
 package server
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/scionproto/scion/go/examples/apna_app/internal/config"
 	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/apnams"
@@ -73,6 +77,8 @@ func (s Server) handshakePartTwo(data *apna.Pkt, raddr *snet.Addr) {
 	}
 	localSession.SessionSharedSecret = sessionSharedKey
 	s.SessionMap[localSessionPubkey] = localSession
+	s.FinalMap[localSession.LocalEphID.String()] = make(map[string]*Session)
+	s.FinalMap[localSession.LocalEphID.String()][localSession.RemoteEphID.String()] = localSession
 	msg := []byte("Handshake Done")
 	edata, err := apnams.EncryptData(localSession.SessionSharedSecret, msg)
 	if err != nil {
@@ -97,17 +103,42 @@ func (s Server) handshakePartTwo(data *apna.Pkt, raddr *snet.Addr) {
 	}
 }
 
+func (s Server) handleData(pkt *apna.Pkt) {
+	sess := s.FinalMap[pkt.RemoteEphID.String()][pkt.LocalEphID.String()]
+	data, err := apnams.DecryptData(sess.SessionSharedSecret, pkt.Data)
+	if err != nil {
+		panic(err)
+	}
+	total += len(data)
+}
+
+var total int
+
+func cleanup() {
+	log.Info("Total bytes", "bytes", total)
+}
+
 func (s Server) handleConnection() {
 	data, raddr, err := s.conn.ReadApna()
 	if err != nil {
 		panic(err)
 	}
 	log.Info("Details", "raddr", raddr)
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cleanup()
+		os.Exit(1)
+	}()
+	total = 0
 	switch data.NextHeader {
 	case 0x00:
 		s.handshakePartOne(data, raddr)
 	case 0x02:
 		s.handshakePartTwo(data, raddr)
+	case 0x03:
+		s.handleData(data)
 	default:
 		log.Error("Unsupported next header")
 	}

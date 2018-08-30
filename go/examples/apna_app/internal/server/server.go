@@ -33,6 +33,7 @@ type Server struct {
 	CtrlEphIDPrivkey common.RawBytes
 	SrvAddr          *apnams.ServiceAddr
 	SessionMap       map[string]*Session
+	FinalMap         map[string]map[string]*Session
 }
 
 var server Server
@@ -53,6 +54,7 @@ func initApnaMS(conf *config.Config, server *Server, network string) error {
 		return common.NewBasicError(macKeyReply.ErrorCode.String(), nil)
 	}
 	server.SessionMap = make(map[string]*Session)
+	server.FinalMap = make(map[string]map[string]*Session)
 	pubkey, privkey, err := crypto.GenKeyPairs(crypto.Curve25519xSalsa20Poly1305)
 	if err != nil {
 		return err
