@@ -1,6 +1,10 @@
 package server
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/spf13/cobra"
 
 	"github.com/scionproto/scion/go/examples/apna_app/internal/config"
@@ -34,6 +38,12 @@ type Server struct {
 	SrvAddr          *apnams.ServiceAddr
 	SessionMap       map[string]*Session
 	FinalMap         map[string]map[string]*Session
+}
+
+var total int
+
+func cleanup() {
+	log.Info("Total bytes", "bytes", total)
 }
 
 var server Server
@@ -102,7 +112,7 @@ func startServer(args []string) {
 		panic(err)
 	}
 	// 3. Initialize SCION related stuff
-	sciondSock := sciond.GetDefaultSCIONDPath(nil)
+	sciondSock := sciond.GetDefaultSCIONDPath(&config.LocalAddr.IA)
 	dispatcher := getDefaultDispatcherSock()
 	if err := snet.Init(config.LocalAddr.IA, sciondSock, dispatcher); err != nil {
 		log.Crit("Unable to initialize SCION network", "err", err)
@@ -113,6 +123,14 @@ func startServer(args []string) {
 		panic(err)
 	}
 	server.conn = sconn
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cleanup()
+		os.Exit(1)
+	}()
+	total = 0
 	log.Info("connection params", "conn", sconn.LocalSnetAddr())
 	for /* ever */ {
 		server.handleConnection()
