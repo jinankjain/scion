@@ -30,8 +30,11 @@ func handleDNSRequest(req *apnams.DNSReq) *apnams.DNSReply {
 func handleDNSRegister(req *apnams.DNSRegister) *apnams.DNSRegisterReply {
 	bench := &apnams.DNSRegisterBenchmark{}
 	start := time.Now()
-	dnsRegister[req.Addr.Protocol] = make(map[string]apnams.Certificate)
-	dnsRegister[req.Addr.Protocol][req.Addr.Addr.String()] = req.Cert
+	if _, ok := dnsRegister[req.Addr.Protocol]; ok {
+		dnsRegister[req.Addr.Protocol][req.Addr.Addr.String()] = req.Cert
+	} else {
+		dnsRegister[req.Addr.Protocol] = make(map[string]apnams.Certificate)
+	}
 	reply := &apnams.DNSRegisterReply{
 		ErrorCode: apnams.ErrorDNSRegisterOk,
 	}
