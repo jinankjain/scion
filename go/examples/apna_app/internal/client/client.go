@@ -1,6 +1,9 @@
 package client
 
 import (
+	"sync/atomic"
+	"time"
+
 	"github.com/spf13/cobra"
 
 	"github.com/scionproto/scion/go/examples/apna_app/internal/config"
@@ -11,6 +14,7 @@ import (
 	"github.com/scionproto/scion/go/lib/log"
 	"github.com/scionproto/scion/go/lib/sciond"
 	"github.com/scionproto/scion/go/lib/snet"
+	"github.com/scionproto/scion/go/proto"
 )
 
 func getDefaultDispatcherSock() string {
@@ -114,7 +118,7 @@ func startClient(args []string) {
 		panic(err)
 	}
 	// 3. Initialize SCION related stuff
-	sciondSock := sciond.GetDefaultSCIONDPath(nil)
+	sciondSock := sciond.GetDefaultSCIONDPath(&config.LocalAddr.IA)
 	dispatcher := getDefaultDispatcherSock()
 	if err := snet.Init(config.LocalAddr.IA, sciondSock, dispatcher); err != nil {
 		log.Crit("Unable to initialize SCION network", "err", err)
@@ -161,4 +165,81 @@ func startClient(args []string) {
 		panic(err)
 	}
 	log.Info("Finally", "buf", string(decryptData), "len", n)
+	var total uint32
+	size := 1320
+	ticker := time.NewTicker(1 * time.Second)
+	start := time.Now()
+
+	for i := 0; i < 946; i++ {
+		select {
+		case <-ticker.C:
+			log.Info("BW is", "total bytes", total)
+			total = 0
+		default:
+			bandwidthTestData := make([]byte, size)
+			ebdata, err := apnams.EncryptData(client.Session.SharedSecret, bandwidthTestData)
+			if err != nil {
+				panic(err)
+			}
+			reply := &apna.Pkt{
+				Which:       proto.APNAPkt_Which_data,
+				LocalEphID:  client.Session.LocalEphID,
+				RemoteEphID: client.Session.RemoteEphID,
+				LocalPort:   config.LocalAddr.L4Port,
+				RemotePort:  config.RemoteAddr.L4Port,
+				NextHeader:  0x03,
+				Data:        ebdata,
+			}
+			err = reply.Sign(client.Config.HMACKey)
+			if err != nil {
+				panic(err)
+			}
+			_, err = conn.WriteApnaTo(reply, &config.RemoteAddr)
+			if err != nil {
+				panic(err)
+			}
+			atomic.AddUint32(&total, 1)
+			time.Sleep(time.Microsecond * 100)
+		}
+	}
+	log.Info("BW is", "total bytes", total, "time", time.Since(start))
+	ping := []byte("ping")
+	for i := 0; i < 100; i++ {
+		start := time.Now()
+		ebdata, err := apnams.EncryptData(client.Session.SharedSecret, ping)
+		if err != nil {
+			panic(err)
+		}
+		reply := &apna.Pkt{
+			Which:       proto.APNAPkt_Which_data,
+			LocalEphID:  client.Session.LocalEphID,
+			RemoteEphID: client.Session.RemoteEphID,
+			LocalPort:   config.LocalAddr.L4Port,
+			RemotePort:  config.RemoteAddr.L4Port,
+			NextHeader:  0x04,
+			Data:        ebdata,
+		}
+		err = reply.Sign(client.Config.HMACKey)
+		if err != nil {
+			panic(err)
+		}
+		_, err = conn.WriteApnaTo(reply, &config.RemoteAddr)
+		if err != nil {
+			panic(err)
+		}
+		data, _, err := conn.ReadApna()
+		if err != nil {
+			panic(err)
+		}
+		msg, err := apnams.DecryptData(client.Session.SharedSecret, data.Data)
+		if err != nil {
+			panic(err)
+		}
+		if string(msg) == "pong" {
+			end := time.Since(start)
+			log.Info("RTT", "time", end)
+		} else {
+			panic("Err in payload")
+		}
+	}
 }
