@@ -1,6 +1,8 @@
 package server
 
 import (
+	"sync/atomic"
+
 	"github.com/scionproto/scion/go/examples/apna_app/internal/config"
 	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/apnams"
@@ -73,6 +75,9 @@ func (s Server) handshakePartTwo(data *apna.Pkt, raddr *snet.Addr) {
 	}
 	localSession.SessionSharedSecret = sessionSharedKey
 	s.SessionMap[localSessionPubkey] = localSession
+	s.SessionMap[localSessionPubkey] = localSession
+	s.FinalMap[localSession.LocalEphID.String()] = make(map[string]*Session)
+	s.FinalMap[localSession.LocalEphID.String()][localSession.RemoteEphID.String()] = localSession
 	msg := []byte("Handshake Done")
 	edata, err := apnams.EncryptData(localSession.SessionSharedSecret, msg)
 	if err != nil {
@@ -97,19 +102,66 @@ func (s Server) handshakePartTwo(data *apna.Pkt, raddr *snet.Addr) {
 	}
 }
 
+func (s Server) handleData(pkt *apna.Pkt) {
+	sess := s.FinalMap[pkt.RemoteEphID.String()][pkt.LocalEphID.String()]
+	_, err := apnams.DecryptData(sess.SessionSharedSecret, pkt.Data)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s Server) handlePing(pkt *apna.Pkt, raddr *snet.Addr) {
+	sess, ok := s.FinalMap[pkt.RemoteEphID.String()][pkt.LocalEphID.String()]
+	if !ok {
+		panic("Key not found")
+	}
+	pong := []byte("pong")
+	msg, err := apnams.DecryptData(sess.SessionSharedSecret, pkt.Data)
+	if err != nil {
+		panic(err)
+	}
+	if string(msg) == "ping" {
+		ebdata, err := apnams.EncryptData(sess.SessionSharedSecret, pong)
+		if err != nil {
+			panic(err)
+		}
+		reply := &apna.Pkt{
+			Which:       proto.APNAPkt_Which_data,
+			LocalEphID:  pkt.RemoteEphID,
+			RemoteEphID: pkt.LocalEphID,
+			LocalPort:   pkt.RemotePort,
+			RemotePort:  pkt.LocalPort,
+			NextHeader:  0x04,
+			Data:        ebdata,
+		}
+		err = reply.Sign(server.Config.HMACKey)
+		if err != nil {
+			panic(err)
+		}
+		_, err = s.conn.WriteApnaTo(reply, raddr)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		panic("Pkt mismatch")
+	}
+}
+
 func (s Server) handleConnection() {
 	data, raddr, err := s.conn.ReadApna()
 	if err != nil {
 		panic(err)
 	}
-	log.Info("Details", "raddr", raddr)
 	switch data.NextHeader {
 	case 0x00:
 		s.handshakePartOne(data, raddr)
 	case 0x02:
 		s.handshakePartTwo(data, raddr)
+	case 0x03:
+		atomic.AddUint32(&total, 1)
+	case 0x04:
+		s.handlePing(data, raddr)
 	default:
 		log.Error("Unsupported next header")
 	}
-	log.Info("Recieved", "data", data)
 }

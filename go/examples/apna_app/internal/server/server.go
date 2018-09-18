@@ -1,6 +1,10 @@
 package server
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/spf13/cobra"
 
 	"github.com/scionproto/scion/go/examples/apna_app/internal/config"
@@ -33,6 +37,13 @@ type Server struct {
 	CtrlEphIDPrivkey common.RawBytes
 	SrvAddr          *apnams.ServiceAddr
 	SessionMap       map[string]*Session
+	FinalMap         map[string]map[string]*Session
+}
+
+var total uint32
+
+func cleanup() {
+	log.Info("Total bytes", "bytes", total)
 }
 
 var server Server
@@ -53,6 +64,7 @@ func initApnaMS(conf *config.Config, server *Server, network string) error {
 		return common.NewBasicError(macKeyReply.ErrorCode.String(), nil)
 	}
 	server.SessionMap = make(map[string]*Session)
+	server.FinalMap = make(map[string]map[string]*Session)
 	pubkey, privkey, err := crypto.GenKeyPairs(crypto.Curve25519xSalsa20Poly1305)
 	if err != nil {
 		return err
@@ -111,6 +123,14 @@ func startServer(args []string) {
 		panic(err)
 	}
 	server.conn = sconn
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cleanup()
+		os.Exit(1)
+	}()
+	total = 0
 	log.Info("connection params", "conn", sconn.LocalSnetAddr())
 	for /* ever */ {
 		server.handleConnection()

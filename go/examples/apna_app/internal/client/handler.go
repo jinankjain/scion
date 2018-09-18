@@ -63,7 +63,8 @@ func (c *Client) handshakePartTwo(data *apna.Pkt) (*apna.Pkt, error) {
 		return nil, err
 	}
 	c.Session.SharedSecret = sessionSharedKey
-	c.Session.RemoteEphID = data.LocalEphID
+	c.Session.RemoteEphID = serverSessionCert.Ephid
+	c.Session.LocalEphID = clientSessionEphidRequest.Cert.Ephid
 	ecert, err := apnams.EncryptCert(c.Session.CtrlSharedSecret, &clientSessionEphidRequest.Cert)
 	if err != nil {
 		return nil, err
