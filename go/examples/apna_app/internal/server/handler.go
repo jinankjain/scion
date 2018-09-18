@@ -110,6 +110,43 @@ func (s Server) handleData(pkt *apna.Pkt) {
 	}
 }
 
+func (s Server) handlePing(pkt *apna.Pkt, raddr *snet.Addr) {
+	sess, ok := s.FinalMap[pkt.RemoteEphID.String()][pkt.LocalEphID.String()]
+	if !ok {
+		panic("Key not found")
+	}
+	pong := []byte("pong")
+	msg, err := apnams.DecryptData(sess.SessionSharedSecret, pkt.Data)
+	if err != nil {
+		panic(err)
+	}
+	if string(msg) == "ping" {
+		ebdata, err := apnams.EncryptData(sess.SessionSharedSecret, pong)
+		if err != nil {
+			panic(err)
+		}
+		reply := &apna.Pkt{
+			Which:       proto.APNAPkt_Which_data,
+			LocalEphID:  pkt.RemoteEphID,
+			RemoteEphID: pkt.LocalEphID,
+			LocalPort:   pkt.RemotePort,
+			RemotePort:  pkt.LocalPort,
+			NextHeader:  0x04,
+			Data:        ebdata,
+		}
+		err = reply.Sign(server.Config.HMACKey)
+		if err != nil {
+			panic(err)
+		}
+		_, err = s.conn.WriteApnaTo(reply, raddr)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		panic("Pkt mismatch")
+	}
+}
+
 func (s Server) handleConnection() {
 	data, raddr, err := s.conn.ReadApna()
 	if err != nil {
@@ -122,6 +159,8 @@ func (s Server) handleConnection() {
 		s.handshakePartTwo(data, raddr)
 	case 0x03:
 		atomic.AddUint32(&total, 1)
+	case 0x04:
+		s.handlePing(data, raddr)
 	default:
 		log.Error("Unsupported next header")
 	}
