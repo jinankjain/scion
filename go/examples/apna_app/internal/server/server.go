@@ -40,7 +40,7 @@ type Server struct {
 	FinalMap         map[string]map[string]*Session
 }
 
-var total int
+var total uint32
 
 func cleanup() {
 	log.Info("Total bytes", "bytes", total)

@@ -278,13 +278,14 @@ func (c *Conn) WriteApnaTo(b *apna.Pkt, raddr *Addr) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	//log.Info("pkt info", "len", len(rsvcPkt))
 	return c.udpConn.WriteTo(rsvcPkt, svcAddr)
 }
 
 func (c *Conn) ReadApna() (*apna.Pkt, *Addr, error) {
 	c.readMutex.Lock()
 	defer c.readMutex.Unlock()
-	b := make([]byte, 2000)
+	b := make([]byte, 1472)
 	_, err := c.udpConn.Read(b)
 	if err != nil {
 		return nil, nil, err

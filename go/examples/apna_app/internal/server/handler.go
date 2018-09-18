@@ -1,6 +1,8 @@
 package server
 
 import (
+	"sync/atomic"
+
 	"github.com/scionproto/scion/go/examples/apna_app/internal/config"
 	"github.com/scionproto/scion/go/lib/apna"
 	"github.com/scionproto/scion/go/lib/apnams"
@@ -102,11 +104,10 @@ func (s Server) handshakePartTwo(data *apna.Pkt, raddr *snet.Addr) {
 
 func (s Server) handleData(pkt *apna.Pkt) {
 	sess := s.FinalMap[pkt.RemoteEphID.String()][pkt.LocalEphID.String()]
-	data, err := apnams.DecryptData(sess.SessionSharedSecret, pkt.Data)
+	_, err := apnams.DecryptData(sess.SessionSharedSecret, pkt.Data)
 	if err != nil {
 		panic(err)
 	}
-	total += len(data)
 }
 
 func (s Server) handleConnection() {
@@ -120,7 +121,7 @@ func (s Server) handleConnection() {
 	case 0x02:
 		s.handshakePartTwo(data, raddr)
 	case 0x03:
-		s.handleData(data)
+		atomic.AddUint32(&total, 1)
 	default:
 		log.Error("Unsupported next header")
 	}

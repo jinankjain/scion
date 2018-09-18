@@ -73,6 +73,7 @@ func generateServiceAddress(cidr string) ([]*apnams.ServiceAddr, error) {
 	}
 	var srvAddrs []*apnams.ServiceAddr
 	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); inc(ip) {
+		ip = ip.To4()
 		srvAddr := &apnams.ServiceAddr{
 			Protocol: proto,
 		}
